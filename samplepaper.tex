@@ -35,73 +35,81 @@ Springer Heidelberg, Tiergartenstr. 17, 69121 Heidelberg, Germany
 ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
 \email{\{abc,lncs\}@uni-heidelberg.de}}
 %
-\maketitle              % typeset the header of the contribution
+\maketitle
 %
 \begin{abstract}
-High-throughout Single-cell RNA sequencing
-  (scRNA-seq) data processing pipelines use multiple steps to transform raw scRNA-seq data to expression matrices, including record filtering, aligning and transcript counting.
-Every two consecutive steps are connected by intermediate data.
-However with the incresase of scRNA-seq data volume, file IO becomes the bottleneck of pipeline performance.
-We take advantage of Spark's in-memory compute and scalable trait to develop a new Java-based program called ScSpark.
-ScSpark can distribute single-cell RNA data processing tasks in the cluster and elminate all disk access for intermediate results.
-Instead of the traditional way, we combine Spark and our proposed function to implement record filtering and transcript counting.
+High-throughput single-cell RNA sequencing
+  (scRNA-seq) data processing pipelines use multiple steps to transform raw barcode next-generation sequencing(NGS) data to express matrices, including sequence quality control, genome alignment and transcript counting.
+However, with the incresasing of scRNA-seq data volume, file input/output(IO) becomes the bottleneck of pipeline performance.
+We take advantage of Spark's in-memory computing and scalable trait to develop a new Java-based program called ScSpark.
+ScSpark can distribute scRNA-seq data processing tasks in the cluster and can elminate all disk accessing for intermediate results.
+We combine Spark and our proposed function to implement sequence quality control and transcript counting.
 Furthermore, we choose STAR as our aligner.
-In order to avoid unneccessary disk acess like extracted FASTQ file and SAM file, we use Java Native Interface(JNI) to deliver FASTQ RDD to STAR, and then transforms return value to SAM RDD.
-We use pbmc\_10k\_v3 as our dataset and build spark's cluster on Aliyun to test ScSpark.
-The experiment result shows indicates ScSpark faster and more scalable than any tradition pipeline.
+In order to avoid unneccessary disk accessing while reading FASTQ file and writing SAM file, we use Java Native Interface(JNI) to deliver FASTQ RDD to invoke STAR, and then transform return value to SAM RDD.
+We use peripheral blood mononuclear cell(PBMC)\_10k\_v3 as our dataset and build spark's cluster on Aliyun to test ScSpark.
+The experiment results indicates ScSpark faster and more scalable than any tradition pipelines.
 \keywords{Intermediate Data \and Fast \and Scalable.}
 \end{abstract}
 
 \section{Introduction}
+In recent years, new molecular biology technologies based on second-generation sequencing have emerged one after another.
+However, current conventional sequencing methods can only analyze the cell population.
+And the final difference is the average difference of the cell population.
+But from a molecular point of view, human cells are not exactly the same, there are differences between cells~\cite{Papalexi2018SinglecellRS}.
+In this context, single cell sequencing is very important.
+Single-cell sequencing not only reveals unique changes in each cell, but also enables the discovery of entirely new cell types, greatly facilitating genomics, enabling precise differentiation of cell types and enabling researchers to study molecular mechanisms at the single-cell level.
+ScRNA-seq is a widely used single-cell sequencing at present, which is achieved through reverse transcription, amplification, and sequencing of all RNA from a single cell, followed by relevant bioinformatics analysis. 
+The large
+         -scale 
+                scRNA-seq technology represented by 10X Genomics is becoming one of the most prevalent platforms.
 
-With the development of single-cell RNA sequencing (scRNA-seq) technology, it has become possible to perform large-scale transcript profifiling for tens of thousands of cells in a single experiment~\cite{gao2020Comparison}.
-The large-scale single-cell sequencing technology represented by 10X Genomics platform is becoming the mainstream. 
-The introduction of cellular barcodes (BC), sequences distinct for each cell attachted to the dT-primer, has increased the throughout and substantially reduced the cost of scRNA-seq.
-These barcodes allow for the demultiplexing of reads after cells are pooled together for sequencing~\cite{tian2018scPipe}. 
-Apart from cellular barcodes, Unique Molecular Identifiers (UMIs)\cite{Kivioja2012Counting}~\cite{camara2017Methods} are random oligonucleotide barcodes that are increasingly used in high-throughput sequencing experiments.
-Through a UMI, identical copies arising from distinct molecules can be distinguished from those arising through PCR amplification of the same molecule~\cite{smith2017UMI}.
-The multiple levels of barcoding uesd in scRNA-seq experiments create additional challenges in data processing, which is much different from RNA-seq and original scRNA-seq.
-We won't discuss experiments where UMIs are not available, such as those conducted using non-barcoded scRNA-seq protocols.
-Researchers around the world developed several scRNA-seq data processing pipelines typically implements multiple steps, including record filtering, aligning and transcript counting, to transform raw scRNA-seq data to expression matrices for further downstream analysis.
-The first step is to filter Fastq reads that have low-quality BCs according to a user-defined threshold.
-This step eliminates the majority of spurious BCs and thus greatly increase the accurate of BCs that need to be considered for counting, and simultaneously to filter low-quality UMIs.
-The remaining Fastq reads are then mapping to the genome using the splice-aware aligner STAR~\cite{dobin2012RNA} or HISAT2~\cite{kim2015hisat}.
-In ScSpark, we choose STAR as or aligner, which user is free to customize mapping by using the options.
-Next, reads are assigned to genes and then generating count tables for UMIs and reads per gene per BC~\cite{swati0zUMIs}.
+The introduction of cell barcode(CB), which assigns different sequences to each cell for transcriptional source retrieval after sequencing, greatly increases the total length of sequencing and reduces the cost of scRNA-seq~\cite{Macosko2015HighlyPG}~\cite{Klein2015DropletBF}.
+These barcodes allow reads to be multiplexed after the cells have been assembled for sequencing.~\cite{tian2018scPipe}.
+Apart from cellular barcodes, Unique Molecular Identifiers(UMIs) are random oligonucleotide barcodes that are used in high-throughput sequencing experiments\cite{Kivioja2012Counting}~\cite{camara2017Methods}.
+By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished. ~\cite{smith2017UMI}.
 
-In a recently published article~\cite{gao2020Comparison}, they encapsulated seven existing
-                                                                                          high-throughput
-                                                                                                          scRNA-seq data processing pipelines with Nextflow, a general integrative workflow management framework, and evaluated their performances in terms of running time, computational resource consumption.
-There are Drop-seq-tools~\cite{macosko2015Dropseq}, UMI-tools~\cite{smith2017UMI}, umis~\cite{macaulay0Svensson}, dropEst~\cite{viktor2018dropEst}, scPipe~\cite{tian2018scPipe}, zUMIs\cite{swati0zUMIs}, CellRanger\cite{zheng2017Massively}.
-Among these pipelines, UMI-tools\cite{smith2017UMI} and CellRanger~\cite{zheng2017Massively} are the most representative.
-UMI-tools~\cite{ref_url1} is an open source tool with an impressive clear process.
-Unfortunately, all of the pipelines mentioned in this article run only on a single machine except CellRanger, and very slowly.
-A big reason for these are the low level of parallelism.
-To address this, STARsolo~\cite{2019STARsolo} has improved the parallelism of the mapping and counting process, and achieved good performance on a single machine.
-However, it lacks filtering preprocessing and can't be extended to multiple nodes.
-And CellRanger which is a highly integrated data process software tailored by 10X Genomics for single-cell RNA sequencing analysis and it go further in parallelism.
-But the performance is lower than ScSpark and other parallelism pipeline that use big data tools.
+In the scRNA-seq experiment, the use of multi-level barcodes presented additional challenges for data processing, which was quite different from the traditional bulk RNA-seq and low-throughput scRNA-seq experiments.
+In recent years, researchers have developed multiple scRNA-seq data processing pipelines, typically implementing steps including sequence quality control, genome alignment, and transcript counting to convert raw scRNA-seq data into an expression matrix for further downstream analysis.
+The first step is to filter fastq readings with low quality BC based on user-defined thresholds.
+This step eliminates most of the false CBs, greatly improving the accuracy of the CBs that need to be considered for counting, while eliminating the low-quality UMI.
+The remaining fastq reads are then mapped to genomes using the splice-aware aligner, such as STAR~\cite{dobin2012RNA} or HISAT2~\cite{kim2015hisat}.
+Next, reads are assigned to genes and then generate count tables for UMIs and reads per gene per CB~\cite{swati0zUMIs}.
 
-There were many studies use big data framework like Apache Hadoop~\cite{ref_url2} and Apache Spark~\cite{ref_url3} to optimize biological data process.
-Due to more efficiency in utilizing in memory computing, Spark is a better big data framework than Hadoop.
-SparkBWA~\cite{abuin2016sparkbwa} and GPF~\cite{li2018high} are good framework that both solve DNA's upstream data process by using Apache Spark.
-In the paper Falco~\cite{Yang2016Falco}, they are claimed to be a cloud-based framework to enable paralellization of existing RNA-seq processing pipelines using big data technologies of Hadoop and Spark for performing massively parallel analysis of large scale transcriptomic data. 
-But Falco lack the filtering preprocessing due to the original pipeline has been transformed coarse-grained and their operations have lots of redundancy disk access which causes it doesn't utilize in memory compute advantage well.
-It is safe to say that there is no scalable tool for transforming the entire scRNA-seq upstream data process pipeline with Spark.
+Nowadays, there are many tools to deal with scRNA-seq, among which the most popular ones are CellRanger~\cite{zheng2017Massively}, umis~\cite{Svensson2017PowerAO}, dropEst~\cite{Petukhov2018dropEstPF}, zUMIs~\cite{swati0zUMIs}, Drop-seq tools~\cite{Macosko2015HighlyPG}, scPipe~\cite{tian2018scPipe} and UMI-tools~\cite{Smith2017UMItoolsMS}~\cite{gao2020Comparison}. 
+UMI-tools~\cite{ref_url1} is an open source tool with an impressive clear process, Our ScSpark is based on improvements to this tool.
+CellRanger which is a highly integrated data process software tailored by 10X Genomics for single-cell RNA sequencing analysis and it performs comparatively well on machine with enough CPU and memory resources in the big data set, but did badly in small data set.
+STARsolo~\cite{2019STARsolo} has improved the parallelism of sequence mapping and counting procedures, and achieved good performance on a single machine.
+It is a pity that all tradition pipeline cannot be extended to multiple nodes.
+
+There have been many studies using big data framework like 
+                                                           Hadoop~\cite{ref_url2}
+                                                                                  and Spark~\cite{ref_url3} to optimize biological data processing.
+Due to more efficiency in utilizing memory computing, Spark is a better big data computing framework than Hadoop's MapReduce~\cite{dean2008mapreduce}~\cite{zaharia2012resilient}.
+SparkBWA~\cite{abuin2016sparkbwa} and GPF~\cite{li2018high} are good frameworks that both improve the efficiency of DNA sequencing upstream data processing by Spark.
+Falco~\cite{Yang2016Falco} has tried to use Spark in scRNA-seq upstream data processing.
+However, its flexibility was limited to a shallow reworking of the pipeline consisting of two popular RNA-seq alignment/feature quantification tools and no consideration of scRNA-seq data features(such as UMI and CB).
+And processing for UMI and CB are the most time-consuming steps in scRNA-seq pipelines.
+Second, Falco's Implementation way depends on tradition pipeline's tool which'll cause low parallelism in each node's internal.
+Most important, Falco’s operations have lots of redundancy disk access which causes it doesn't utilize Spark’s in-memory compute advantage well.
+
+To more efficient use Spark's parallel and in memory compute advantage, we totally use Spark's function to implement sequence quality control but not like Falco use tradition pipeline.
+And different with Falco, we enhance STAR's file IO interface, to reduce redundant disk access.
+In the end, scSpark has implemented transcript counting by combining Spark function and our algorithm to achieve parallel compute.
+The traditional single machine serial processing mode has been unable to meet the demand of computing and storage resources for super-large scale scRNA-seq data.
+Our work plans to adopt Spark system architecture propose a set of in memory computing and scalable scRNA-seq data processing pipeline, which can significantly reduce the processing time.
 
 \section{Method}
 \subsection{Overview}
 We implemented our program based on the Spark framework to utilize Spark's advantage, run program across the cluster, and default cache data keeps in memory.
-With the increase of dataset volume, the time to process intermediate result file occupies a more significant proportion on total time.
-And the single machine process capacity is not sufficient to adapt to the increasing scRNA-seq data volume.
-Therefore, reducing the disk access of intermediate result file and improving the upstream data process's scalability is scSpark's primary target.
+With the increasing of dataset volume, the time to process intermediate result file occupies a more significant proportion on total time.
+And the single machine's capacity is not sufficient to adapt the increasing scRNA-seq data volume.
+Therefore, reducing the disk access of intermediate result file and improving the upstream data process's scalability is our scSpark's target.
 
 \subsection{Spark Version Filter}
 \begin{figure}
   \includegraphics[width=\textwidth]{fig1.png}
   \caption{An overview of Spark version filter.} \label{fig1}
 \end{figure}  
-Our novelty Spark version filter aim to split large Fastq file to each node and take advantage of parallel computing.
 Large FASTQ file can load in each node's memory parallel therefore the load speed doesn't limit by single node disk access speed.
 As shown in Fig~\ref{fig1}, the filter step typically consists of two main components, generate whitelist which can identity of the true cell barcodes is unknown, use the whitelist to filter FASTQ R1 and then extract FASTQ R2 according to filtered FASTQ R1's index.
 
@@ -153,7 +161,7 @@ An example scRNA-seq dataset generated by 10X Genomics on their platform was use
 It contains two gzipped FASTQ files, after unzip, FASTQ R1's volume is 69 Gbytes, and FASTQ R2's volume is 144 Gbytes, each of that file contain 640 millions records.
 We used STAR as our aligner, mapping to an index built on the human NCBI38 reference which called GRCh38.p12.genome.fa and use genome.gtf~\cite{ref_url5} to filter the SAM~\cite{ref_url5}.
 To evaluate the reason of why scSpark have a scalability ceiling and to experiment more convenient, we split FASTQ file to 100 millions, 160 millions and 320 millions records,.
-\subsection{Performance Evaluation}
+\subsection{Efficiency Evaluation}
 \begin{table}
   \centering
   \caption{tradition pipelien and scSpark's performance compare}\label{tab1}
@@ -226,7 +234,7 @@ To find the reason why the align step is more scalability than the other step an
 We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data volume size and small volume dataset will lost its scalability earier than large volume dataset.
 \begin{figure}
   \includegraphics[width=\textwidth]{fig6.png}
-  \caption{Each step consumes time.} \label{fig6}
+  \caption{Invoked STAR's mapping step.} \label{fig6}
 \end{figure}
 
 \begin{table}
@@ -244,32 +252,67 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
 Then we test STAR program, and find the mapping speed is influenced by data volume.
 As Table~\ref{tab3} shown, STAR mapping speed will increase when the data volume increase.
 So when we get scalability by increase partition, each partition's read number decrease will limit the scalability increase.
+
+\subsection{Performance Analysis}
+We tested performance to find bottleneck of our scSpark.
+We used 640 millions records of FASTQ data to evaluate two aspect of our scSpark.
+First we compared scSpark spend in network shuffle, disk access and compute time proportion to find whether network shuffle or disk access occupies too much time.
+Second we tested CPU and memory usage, to ensure which resources will be scSpark's bottleneck.
+
+\subsubsection{Network and Disk Behavior of scSpark}
+\begin{figure}
+  \includegraphics[width=\textwidth]{fig7.png}
+  \caption{Each step consumes time.} \label{fig7}
+\end{figure}
+We computed network time by summing up the time that our scSpark shuffle data in multi machine.
+Disk access comes from loading FASTQ, STAR's index and GTF files.
+The ideal situation is tasks did not waste any time in disk access and network shuffle.
+We found that scSpark's computing time occupies most execute time.
+Except STAR's index file, all file's disk access distribute to each node that improve whole system's loading speed.
+And we found the time that waste in shuffling doesn't occypy too much time.
+
+\subsubsection{CPU and Memory usage of scSpark}
+\begin{figure}
+  \includegraphics[width=\textwidth]{fig8.png}
+  \caption{CPU and Memory usage of scSpark.} \label{fig8}
+\end{figure}
+We monitored scSpark's CPU and memory usage during processing.
+As Fig~\ref{fig8} shown, in sequence quality control step, scSpark highly exploited each node's multi cores CPU to achieve speedup.
+Convenition pipelines single thread solution's CPU usage is much lower than scSpark.
+And we found that scSpark's boundary much comes from genome alignment.
+Because we invoked STAR as our alignment tool, and STAR's program naturally occupy most proportion of memory in this step.
 \section{Conclusion}
-In this paper, we propose a new way which utilize Apache Spark's in memory compute trait and we modify the filter and count, to speedup scRNA-seq upstream data process.
-Our program can take advantage of multi machine compute capacity to speedup all step.
-Modify filter and count algorithm to suit with parallel compute also get some improve.
-Most important, eliminate redundant disk access can make our program much more quick than tradition pipeline.
+In this paper, we proposed a way which utilize Apache Spark's in memory compute trait and get considerable speedup and scalability.
+Our scSpark can take advantage of multi machine compute capacity to speedup all step and eliminate redundant disk access.
 
-Except performance improve, our program also show much more scalability than any tradition pipeline, and close to linear improve.
-And we found our scalability is much come from align step.
-Our program not only can imporve each partition process STAR program's mapping speed, but also can improve scalabliity by increasing partition number if the resource is sufficient.
+Except performance improve, our scSpark also shows much more scalability than any tradition pipeline which closes to linear improve.
+Our scSpark not only can imporve each partition process STAR program's mapping speed, but also can improve scalabliity by increasing partition number if the resource is sufficient.
 
-But we also found scalability improve have a ceiling.
-The reason is STAR program mapping speed influenced by loading index time, and if the data volume is small, the influence occupy a large proportion of whole STAR program process time.
-We doubt if we can utilize distributed search~\cite{divya2013elasticsearch} or load index once in whole cluster to replace STAR, we can get more speedup and scalability.
+And we also found our scSpark's scalability improve has a ceiling.
+The reason is that our scSpark invokes STAR's mapping speed influenced by loading index time.
+And if data volume is tiny, the influence occupies a large proportion of whole the STAR program process time.
 
-Our next step work consists of two components.
-First, we will use a new way to generate index and align by utilizing distributed search, to expand scalability.
-Second, we think if we can change our program from batch process to stream process, we could reduce some waiting time between each continuous step.
 \begin{thebibliography}{8}
 
 %\bibliographystyle{splncs04}
 %\bibliography{referenceTest}
 
-\bibitem{gao2020Comparison}
-Gao, M., Ling, M., Tang, X., Wang, S., Xiao, X., Qiao, Y., Yang, W., Yu, R.:
-Comparison of high-throughput single-cell rna sequencing data processing
-pipelines  (02 2020). \doi{10.1101/2020.02.09.940221}
+\bibitem{Papalexi2018SinglecellRS}
+Papalexi, E., Satija, R.: Single-cell rna sequencing to explore immune cell
+heterogeneity. Nature Reviews Immunology  \textbf{18},  35--45 (2018)
+
+\bibitem{Klein2015DropletBF}
+Klein, A.M., Mazutis, L., Akartuna, I., Tallapragada, N., Veres, A., Li, V.,
+Peshkin, L., Weitz, D., Kirschner, M.: Droplet barcoding for single-cell
+transcriptomics applied to embryonic stem cells. Cell  \textbf{161},
+1187--1201 (2015)
+  
+\bibitem{Macosko2015HighlyPG}
+Macosko, E.Z., Basu, A., Satija, R., Nemesh, J., Shekhar, K., Goldman, M.,
+Tirosh, I., Bialas, A., Kamitaki, N., Martersteck, E.M., Trombetta, J.J.,
+Weitz, D., Sanes, J., Shalek, A., Regev, A., McCarroll, S.: Highly parallel
+genome-wide expression profiling of individual cells using nanoliter
+droplets. Cell  \textbf{161},  1202--1214 (2015)
 
 \bibitem{tian2018scPipe}
 Tian, L., Su, S., Dong, X., Amannzalcenstein, D., Biben, C., Seidi, A., Hilton,
@@ -286,11 +329,6 @@ identifiers. Nature Methods  \textbf{9}(1),  72--74 (2012)
 Camara, P.G.: Methods and challenges in the analysis of single-cell
 rna-sequencing data. Current Opinion in Systems Biology  (2017)
 
-\bibitem{smith2017UMI}
-Smith, T., Heger, A., Sudbery, I.: Umi-tools: modeling sequencing errors in
-unique molecular identifiers to improve quantification accuracy. Genome
-research  \textbf{27}(3), ~491 (2017)
-
 \bibitem{dobin2012RNA}
 Dobin, A., Davis, C.A., Schlesinger, F.: Rna-star : ultrafast universal spliced
 sequences aligner : Supplementary materials. Hgdownload  (2012)
@@ -299,9 +337,41 @@ sequences aligner : Supplementary materials. Hgdownload  (2012)
 Kim, D., Langmead, B., Salzberg, S.L.: Hisat: a fast spliced aligner with low
 memory requirements. Nature methods  \textbf{12}(4),  357--360 (2015)
 
+\bibitem{smith2017UMI}
+Smith, T., Heger, A., Sudbery, I.: Umi-tools: modeling sequencing errors in
+unique molecular identifiers to improve quantification accuracy. Genome
+research  \textbf{27}(3), ~491 (2017)
+
 \bibitem{swati0zUMIs}
 Swati, P., Christoph, Z., Beate, V., Wolfgang, E., Ines, H.: zumis - a fast and
 flexible pipeline to process rna sequencing data with umis. Gigaence (6), ~6
+
+\bibitem{zheng2017Massively}
+Zheng, G.X.Y., Terry, J.M., Belgrader, P., Ryvkin, P., Bent, Z.W., Wilson, R.,
+Ziraldo, S.B., Wheeler, T.D., Mcdermott, G.P., Zhu, J.a.: Massively parallel
+digital transcriptional profiling of single cells. Nature Communications
+\textbf{8},  14049 (2017)
+
+\bibitem{Svensson2017PowerAO}
+Svensson, V., Natarajan, K., Ly, L.H., Miragaia, R., Labalette, C., Macaulay,
+I., Cvejic, A., Teichmann, S.: Power analysis of single cell rna-sequencing
+experiments. Nature methods  \textbf{14},  381 -- 387 (2017)
+
+\bibitem{Petukhov2018dropEstPF}
+Petukhov, V., Guo, J., Baryawno, N., Severe, N., Scadden, D., Samsonova, M.,
+Kharchenko, P.: dropest: pipeline for accurate estimation of molecular counts
+in droplet-based single-cell rna-seq experiments. Genome Biology  \textbf{19}
+(2018)
+
+\bibitem{Smith2017UMItoolsMS}
+Smith, T., Heger, A., Sudbery, I.M.: Umi-tools: modeling sequencing errors in
+unique molecular identifiers to improve quantification accuracy. Genome
+research  \textbf{27 3},  491--499 (2017)
+
+\bibitem{gao2020Comparison}
+Gao, M., Ling, M., Tang, X., Wang, S., Xiao, X., Qiao, Y., Yang, W., Yu, R.:
+Comparison of high-throughput single-cell rna sequencing data processing
+pipelines  (02 2020). \doi{10.1101/2020.02.09.940221}
 
 \bibitem{macosko2015Dropseq}
 Macosko, E.Z., Basu, A., Satija, R., Nemesh, J., Shekhar, K., Goldman, M.,
@@ -322,12 +392,6 @@ Viktor, P., Jimin, G., Ninib, B., Nicolas, S., Scadden, D.T., Samsonova, M.G.,Kh
   counts in droplet-based single-cell rna-seq experiments. Genome Biology
 \textbf{19}(1), ~78 (2018)
 
-\bibitem{zheng2017Massively}
-Zheng, G.X.Y., Terry, J.M., Belgrader, P., Ryvkin, P., Bent, Z.W., Wilson, R.,
-Ziraldo, S.B., Wheeler, T.D., Mcdermott, G.P., Zhu, J.a.: Massively parallel
-digital transcriptional profiling of single cells. Nature Communications
-\textbf{8},  14049 (2017)
-
 \bibitem{ref_url1}
 UMI\_tools, \url{https://github.com/CGATOxford/UMI-tools}. Last accessed 30
 Nov 2020
@@ -343,6 +407,17 @@ Nov 2020
 \bibitem{ref_url3}
 Apache Spark framework, \url{https://spark.apache.org/}. Last accessed 30
 Nov 2020
+
+\bibitem{dean2008mapreduce}
+Dean, J., Ghemawat, S.: Mapreduce: simplified data processing on large
+clusters. Communications of the ACM  \textbf{51}(1),  107--113 (2008)
+
+\bibitem{zaharia2012resilient}
+Zaharia, M., Chowdhury, M., Das, T., Dave, A., Ma, J., McCauly, M., Franklin,
+M.J., Shenker, S., Stoica, I.: Resilient distributed datasets: A
+fault-tolerant abstraction for in-memory cluster computing. In: Presented as
+part of the 9th $\{$USENIX$\}$ Symposium on Networked Systems Design and
+Implementation ($\{$NSDI$\}$ 12). pp. 15--28 (2012)
 
 \bibitem{abuin2016sparkbwa}
 Abu{\'\i}n, J.M., Pichel, J.C., Pena, T.F., Amigo, J.: Sparkbwa: speeding up
@@ -369,7 +444,7 @@ Nov 2020
 
 \bibitem{divya2013elasticsearch}
 Divya, M.S., Goyal, S.K.: Elasticsearch: An advanced and quick search technique
-  to handle voluminous data. Compusoft  \textbf{2}(6), ~171 (2013)
+to handle voluminous data. Compusoft  \textbf{2}(6), ~171 (2013)
 
 \end{thebibliography}
 \end{document}
