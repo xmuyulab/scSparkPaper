@@ -14,7 +14,7 @@
 
 \begin{document}
 %
-\title{ScSpark: Low-Redundancy disk access and High-Performance tool for the Single-Cell RNA sequenccing data processing\thanks{Supported by organization x.}}
+\title{ScSpark: Low-Redundancy disk access and High-Performance tool for the Single-Cell RNA sequenceing data processing\thanks{Supported by organization x.}}
 %
 %\titlerunning{Abbreviated paper title}
 % If the paper title is too long for the running head, you can set
@@ -40,14 +40,14 @@ ABC Institute, Rupert-Karls-University Heidelberg, Heidelberg, Germany\\
 \begin{abstract}
 High-throughput single-cell RNA sequencing
   (scRNA-seq) data processing pipelines use multiple steps to transform raw barcode next-generation sequencing(NGS) data to express matrices, including sequence quality control, genome alignment and transcript counting.
-However, with the incresasing of scRNA-seq data volume, file input/output(IO) becomes the bottleneck of pipeline performance.
-We take advantage of Spark's in-memory computing and scalable trait to develop a new Java-based program called ScSpark.
+However, with the incresasing of scRNA-seq data volume, file input/output(IO) becomes the bottleneck in pipeline performance.
+We takk advantage of Spark's in-memory computing and scalable trait to develop a new Java-based program called ScSpark.
 ScSpark can distribute scRNA-seq data processing tasks in the cluster and can elminate all disk accessing for intermediate results.
 We combine Spark and our proposed function to implement sequence quality control and transcript counting.
-Furthermore, we choose STAR as our aligner.
-In order to avoid unneccessary disk accessing while reading FASTQ file and writing SAM file, we use Java Native Interface(JNI) to deliver FASTQ RDD to invoke STAR, and then transform return value to SAM RDD.
+Furthermore, we invoke STAR program as our aligner.
+In order to avoid unneccessary disk accessing while reading FASTQ file and writing SAM file, we use Java Native Interface(JNI) to deliver FASTQ RDD's data, and then abstract return value to SAM RDD.
 We use peripheral blood mononuclear cell(PBMC)\_10k\_v3 as our dataset and build spark's cluster on Aliyun to test ScSpark.
-The experiment results indicates ScSpark faster and more scalable than any tradition pipelines.
+The experiment results indicates ScSpark more efficient and more scalable than any tradition pipelines.
 \keywords{Intermediate Data \and Fast \and Scalable.}
 \end{abstract}
 
@@ -65,14 +65,14 @@ The large
 
 The introduction of cell barcode(CB), which assigns different sequences to each cell for transcriptional source retrieval after sequencing, greatly increases the total length of sequencing and reduces the cost of scRNA-seq~\cite{Macosko2015HighlyPG}~\cite{Klein2015DropletBF}.
 These barcodes allow reads to be multiplexed after the cells have been assembled for sequencing.~\cite{tian2018scPipe}.
-Apart from cellular barcodes, Unique Molecular Identifiers(UMIs) are random oligonucleotide barcodes that are used in high-throughput sequencing experiments\cite{Kivioja2012Counting}~\cite{camara2017Methods}.
+Apart from cell barcodes, Unique Molecular Identifiers(UMIs) are random oligonucleotide barcodes that are used in high-throughput sequencing experiments\cite{Kivioja2012Counting}~\cite{camara2017Methods}.
 By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished. ~\cite{smith2017UMI}.
 
 In the scRNA-seq experiment, the use of multi-level barcodes presented additional challenges for data processing, which was quite different from the traditional bulk RNA-seq and low-throughput scRNA-seq experiments.
 In recent years, researchers have developed multiple scRNA-seq data processing pipelines, typically implementing steps including sequence quality control, genome alignment, and transcript counting to convert raw scRNA-seq data into an expression matrix for further downstream analysis.
-The first step is to filter fastq readings with low quality BC based on user-defined thresholds.
+The first step is to filter FASTQ readings with low quality BC based on user-defined thresholds.
 This step eliminates most of the false CBs, greatly improving the accuracy of the CBs that need to be considered for counting, while eliminating the low-quality UMI.
-The remaining fastq reads are then mapped to genomes using the splice-aware aligner, such as STAR~\cite{dobin2012RNA} or HISAT2~\cite{kim2015hisat}.
+The remaining FASTQ reads are then mapped to genomes using the splice-aware aligner, such as STAR~\cite{dobin2012RNA} or HISAT2~\cite{kim2015hisat}.
 Next, reads are assigned to genes and then generate count tables for UMIs and reads per gene per CB~\cite{swati0zUMIs}.
 
 Nowadays, there are many tools to deal with scRNA-seq, among which the most popular ones are CellRanger~\cite{zheng2017Massively}, umis~\cite{Svensson2017PowerAO}, dropEst~\cite{Petukhov2018dropEstPF}, zUMIs~\cite{swati0zUMIs}, Drop-seq tools~\cite{Macosko2015HighlyPG}, scPipe~\cite{tian2018scPipe} and UMI-tools~\cite{Smith2017UMItoolsMS}~\cite{gao2020Comparison}. 
@@ -100,7 +100,7 @@ Our work plans to adopt Spark system architecture propose a set of in memory com
 
 \section{Method}
 \subsection{Overview}
-We implemented our program based on the Spark framework to utilize Spark's advantage, run program across the cluster, and default cache data keeps in memory.
+We implemented scSpark based on Spark framework to utilize Spark's advantage, run program across the cluster, and default cache data keeps in memory.
 With the increasing of dataset volume, the time to process intermediate result file occupies a more significant proportion on total time.
 And the single machine's capacity is not sufficient to adapt the increasing scRNA-seq data volume.
 Therefore, reducing the disk access of intermediate result file and improving the upstream data process's scalability is our scSpark's target.
@@ -113,21 +113,21 @@ Therefore, reducing the disk access of intermediate result file and improving th
 Large FASTQ file can load in each node's memory parallel therefore the load speed doesn't limit by single node disk access speed.
 As shown in Fig~\ref{fig1}, the filter step typically consists of two main components, generate whitelist which can identity of the true cell barcodes is unknown, use the whitelist to filter FASTQ R1 and then extract FASTQ R2 according to filtered FASTQ R1's index.
 
-We load each split of FASTQ R1 to memory, and abstract them as FASTQ R1 RDD.
+We loaded each split of FASTQ R1 to memory, and abstract them as FASTQ R1 RDD.
 Generate whitelist actually is a top N problem that the problem can use Spark's function to achieve parllel compute.
 By using reduceByKey function, FASTQ R1 RDD can count each split's barcodes times parallel and sum each split's result in the end.
 After that we can use the result to generate whitelist RDD by Spark's sort and take function, both can parallel compute in the cluster.
 We can easily get filtered FASTQ R1 RDD, by using the join function to find which read's cell barcode is in the whitelist.
 The last step in filter is extracting FASTQ R2.
-We use the join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index.
+We used join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with same index.
 \subsection{Eleminate redundancy disk access in Aligner step}
 \begin{figure}
   \includegraphics[width=\textwidth]{fig2.png}
   \caption{New way to implement STAR's interface.} \label{fig2}
 \end{figure}
-Apart from Cellranger we can't know how it implements because it isn't a open source software, in tradition pipeline, STAR need load extracted Fastq R2 file or load Fastq R1, R2 and whitelist actually will generate unneccessary disk access.  
+Apart from Cellranger we can't know how it implements because it isn't a open source software, in tradition pipeline, STAR need load extracted FASTQ R2 file or load FASTQ R1, R2 and whitelist actually will generate unneccessary disk access.  
 We choose STAR as our aligner but modify how STAR loads FASTQ file to avoid load extracted FASTQ R2 and FASTQ R1 twice. 
-As shown in Fig~\ref{fig2}, we utilize Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR, and then start the STAR process.
+As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR, and then run the STAR process.
 To overcome node's data volume imbalance problem, we repartition the extracted FASTQ R2 RDD, and then each node can run STAR parallel and with counterpoise data volume.
 We also find if node's in memory is enough, we can start up more than one STAR's in one node to achieve better parallel.
 STAR's result SAM or BAM file generate more disk access waste than STAR's input, we refer STAR-solo's solution to solve the problem by combining aligner and count.
@@ -150,7 +150,7 @@ ScSpark breaks the limitation of one node's compute and can scale easily.
 We'll evaluate the speed, scalabilty and compare each step's scalability of our program in this section.
 First, we'll run our program and tradition pipeline and use process time to evaluated the advantage of scSpark.
 And then, the index of speedup helps us to examify the scalability of scSpark.
-In the end, we compare each step's scalability to find the reason why scSpark's scalability also has a ceiling.
+In the end, we compare each step's scalability and find the reason why scSpark's scalability also has a ceiling.
 \subsection{Experiment environments and Data Sets prepare}
 We use Apache Spark version 2.1.0 as our in-memory computing environment.
 The Spark cluster consists of Aliyun's ECS, and each node consists of 16 vCPU
