@@ -4,6 +4,12 @@
 \@writefile{toc}{\authcount {3}}
 \@writefile{toc}{\contentsline {author}{First Author \and Second Author \and Third Author}{1}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}\protected@file@percent }
+\citation{Zhang2019ComparativeAO}
+\citation{Macosko2015HighlyPG}
+\citation{Klein2015DropletBF}
+\citation{zheng2017Massivelypd}
+\citation{Rosenberg2018SinglecellPO}
+\citation{Cao2017ComprehensiveSC}
 \citation{Macosko2015HighlyPG}
 \citation{Klein2015DropletBF}
 \citation{tian2018scPipe}
@@ -12,16 +18,13 @@
 \citation{smith2017UMI}
 \citation{dobin2012RNA}
 \citation{kim2015hisat}
+\citation{Baruzzo2017SimulationbasedCB}
 \citation{swati0zUMIs}
 \citation{zheng2017Massively}
-\citation{Svensson2017PowerAO}
-\citation{Petukhov2018dropEstPF}
-\citation{swati0zUMIs}
-\citation{Macosko2015HighlyPG}
-\citation{tian2018scPipe}
 \citation{Smith2017UMItoolsMS}
-\citation{gao2020Comparison}
+\citation{2019STARsolo}
 \citation{ref_url1}
+\citation{gao2020Comparison}
 \citation{2019STARsolo}
 \citation{ref_url2}
 \citation{ref_url3}
@@ -32,45 +35,49 @@
 \citation{Yang2016Falco}
 \@writefile{toc}{\contentsline {section}{\numberline {2}Method}{3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Overview}{3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Spark Version Filter}{3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces An overview of Spark version filter.}}{4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Spark Version Sequence Quality Control}{4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces An overview of Spark version Sequence Quality Control.}}{4}\protected@file@percent }
 \newlabel{fig1}{{1}{4}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Eleminate redundancy disk access in Aligner step}{4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Eleminate redundancy disk access in Aligner step}{5}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces New way to implement STAR's interface.}}{5}\protected@file@percent }
 \newlabel{fig2}{{2}{5}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces An overview of Spark version count.}}{5}\protected@file@percent }
-\newlabel{fig3}{{3}{5}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Count with multi-node}{5}\protected@file@percent }
 \citation{ref_url4}
 \citation{ref_url5}
 \citation{ref_url5}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Count with multi-node}{6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces An overview of Spark version count.}}{6}\protected@file@percent }
+\newlabel{fig3}{{3}{6}}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Results}{6}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Experiment environments and Data Sets prepare}{6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Efficiency Evaluation}{6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Efficiency Evaluation}{7}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces tradition pipelien and scSpark's performance compare}}{7}\protected@file@percent }
 \newlabel{tab1}{{1}{7}}
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Each step performance compare}}{7}\protected@file@percent }
 \newlabel{tab2}{{2}{7}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Scalability Evalution}{7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Scalability Evalution}{8}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces An overview of Spark version filter.}}{8}\protected@file@percent }
 \newlabel{fig4}{{4}{8}}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Each step consumes time.}}{8}\protected@file@percent }
-\newlabel{fig5}{{5}{8}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Comparsion each step performance's increase}{9}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Invoked STAR's mapping step.}}{9}\protected@file@percent }
-\newlabel{fig6}{{6}{9}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Comparsion each step performance's increase}{8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Each step consumes time.}}{9}\protected@file@percent }
+\newlabel{fig5}{{5}{9}}
 \@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Data volume influence}}{9}\protected@file@percent }
 \newlabel{tab3}{{3}{9}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Performance Analysis}{10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Performance Analysis}{9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Network and Disk Behavior of scSpark}{9}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Invoked STAR's mapping step.}}{10}\protected@file@percent }
+\newlabel{fig6}{{6}{10}}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Each step consumes time.}}{10}\protected@file@percent }
 \newlabel{fig7}{{7}{10}}
-\@writefile{toc}{\contentsline {subsubsection}{Network and Disk Behavior of scSpark}{10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{CPU and Memory usage of scSpark}{10}\protected@file@percent }
-\bibcite{Papalexi2018SinglecellRS}{1}
-\bibcite{Klein2015DropletBF}{2}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces CPU and Memory usage of scSpark.}}{11}\protected@file@percent }
 \newlabel{fig8}{{8}{11}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Conclusion}{11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{CPU and Memory usage of scSpark}{11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{Biological verification}{11}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces correlation of scSpark and UMI-tools.}}{12}\protected@file@percent }
+\newlabel{fig9}{{9}{12}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces tSNE picture based on scSpark and UMI-tools' gene expression matrix.}}{12}\protected@file@percent }
+\newlabel{fig10}{{10}{12}}
+\bibcite{Papalexi2018SinglecellRS}{1}
+\bibcite{Klein2015DropletBF}{2}
 \bibcite{Macosko2015HighlyPG}{3}
 \bibcite{tian2018scPipe}{4}
 \bibcite{Kivioja2012Counting}{5}
@@ -82,6 +89,7 @@
 \bibcite{zheng2017Massively}{11}
 \bibcite{Svensson2017PowerAO}{12}
 \bibcite{Petukhov2018dropEstPF}{13}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Conclusion}{13}\protected@file@percent }
 \bibcite{Smith2017UMItoolsMS}{14}
 \bibcite{gao2020Comparison}{15}
 \bibcite{macosko2015Dropseq}{16}
@@ -99,3 +107,12 @@
 \bibcite{ref_url4}{28}
 \bibcite{ref_url5}{29}
 \bibcite{divya2013elasticsearch}{30}
+\bibcite{Baruzzo2017SimulationbasedCB}{31}
+\bibcite{Cao2017ComprehensiveSC}{32}
+\bibcite{Klein2015DropletBF}{33}
+\bibcite{Macosko2015HighlyPG}{34}
+\bibcite{Papalexi2018SinglecellRS}{35}
+\bibcite{Rosenberg2018SinglecellPO}{36}
+\bibcite{Smith2017UMItoolsMS}{37}
+\bibcite{Zhang2019ComparativeAO}{38}
+\bibcite{zheng2017Massivelypd}{39}
