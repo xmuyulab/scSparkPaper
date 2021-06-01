@@ -59,9 +59,8 @@ With the drastically increasing of scRNA-seq data volume, the processing speed a
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
 The STAR aligner was encapsulated as a shared object. % and invoked the shared object as our aligner. 
-It can significantly reduce disk access for saving and loading intermediate results. 
 In order to avoid unneccessary disk access while reading FASTQ file and writing SAM file, we used Java Native Interface (JNI) to deliver FASTQ RDD's data, and then abstract return value to SAM RDD. 
-scSpark distributes scRNA-seq data and process tasks in the cluster. 
+By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading intermediate results. 
 We build spark's cluster on Aliyun to test scSpark. 
 The experimental results indicate that scSpark is more efficient and more scalable than any tradition tool. 
 \end{abstract}
@@ -80,12 +79,14 @@ However, the analysis accuracy of RNA-seq could only reach the level of the cell
 But from the molecular point of view, human cells are not exactly the same, there are differences between cells. 
 Single-cell RNA sequencing essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
 
-High-throughput single-cell RNA-seq protocols (HTscRNA-seq), which allow us to sequence thousands of cells simultaneously in a single experiment, are the most popular strategies currently for scRNA-seq technology~\cite{Zhang2019ComparativeAO}. Drop-seq~\cite{Macosko2015HighlyPG}, inDrop~\cite{Klein2015DropletBF} and 10X\cite{Zheng2017Massively} are the three most widely used HTscRNA-seq protocols. 
+High-throughput scRNA-seq protocols, which enable sequencing thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
+% are the most popular strategies currently for scRNA-seq technology~\cite{Zhang2019ComparativeAO}. 
+Among them, Drop-seq~\cite{Macosko2015HighlyPG}, inDrop~\cite{Klein2015DropletBF} and 10X\cite{Zheng2017Massively} are the three most widely used protocols. 
 Among them, 10X is becoming one of the most prevalent platforms. 
-Two separate barcode, named cell barcode (CB) and unique molecular identifier (UMI) are introduced in HTscRNA-seq~\cite{Rosenberg2018SinglecellPO}~\cite{Cao2017ComprehensiveSC}. 
+Two separate barcode, named cell barcode (CB) and unique molecular identifier (UMI) are introduced in scRNA-seq~\cite{Rosenberg2018SinglecellPO}~\cite{Cao2017ComprehensiveSC}. 
 CB, which assigns different sequences to each cell for transcriptional source retrieval after sequencing, greatly increases the total length of sequence and reduces the cost of scRNA-seq~\cite{Macosko2015HighlyPG}~\cite{Klein2015DropletBF}. 
 These barcodes allow reads to be demultiplexed after the cells have been assembled for sequencing~\cite{Tian2018scPipe}.
-Apart from cell barcodes, UMIs are random oligonucleotide barcodes that are used in HTscRNA-seq experiments~\cite{Kivioja2012Counting}~\cite{Camara2017Methods}.
+Apart from cell barcodes, UMIs are random oligonucleotide barcodes that are used in scRNA-seq experiments~\cite{Kivioja2012Counting}~\cite{Camara2017Methods}.
 By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished~\cite{Smith2017UMItools}.
 
 In the scRNA-seq experiment, the use of multi-level barcodes presented additional challenges for data processing, which was quite different from traditional bulk RNA-seq and low-throughput scRNA-seq experiments. 
@@ -151,7 +152,7 @@ The last step in sequence quality control was using join function again to combi
   \caption{New way to implement STAR's interface.} \label{fig2}
 \end{figure}
 
-Apart from Cellranger we can't know how it implements because it isn't a open source software. 
+Apart from Cellranger we can't know how it implements because it isn't an open source software. 
 In tradition pipeline, STAR need load extracted FASTQ R2 file or load FASTQ R1 file, FASTQ R2 file and whitelist file that actually will generate unneccessary disk access. 
 We choose STAR as our aligner but modify how STAR loads FASTQ file to avoid load extracted FASTQ R2 and FASTQ R1 twice. 
 As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process. 
