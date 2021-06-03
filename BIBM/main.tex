@@ -12,7 +12,7 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{scSpark: High-performance single-cell RNA sequencing data processing toolkit}
+\title{scSpark: a fast and scalable single-cell RNA sequencing data processing toolkit}
 
 \author{\IEEEauthorblockN{1\textsuperscript{st} Given Name Surname}
 \IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
@@ -329,14 +329,14 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
     \caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig10}
   \end{figure*}
   \section{Conclusion}
-  In this paper, we proposed a way which utilize Apache Spark's in memory compute trait and get considerable speedup and scalability. 
-  Our scSpark can take advantage of multi machine compute capacity to speedup all step and eliminate redundant disk access. 
+  In this paper, we proposed a way to utilize Apache Spark's in memory compute trait and achieved considerable speedup and scalability. 
+  Our scSpark can take advantages of multi machine compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
   
-  Except performance improve, our scSpark also show much more scalability than any tradition pipeline which closes to linear improve.
-  Our scSpark not only can improve each partition process STAR program's mapping speed, but also can improve scalability by increasing partition number if the resource is sufficient.
+  In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and 【待修改：it closes to linear improve.】
+  Moreover,scSpark can improve scalability by increasing partition number if the resource is sufficient.
   
-  And we also found our scSpark's scalability improve has a ceiling. 
-  The reason is that our scSpark invokes STAR's mapping speed influenced by loading index time. 
+  And we also found our scSpark's scalability improvement has a ceiling. 
+  The reason is that our scSpark invokes STAR's mapping speed is influenced by loading index time. 
   And if data volume is tiny, the influence occupies a large proportion of whole the STAR program process time. 
 
 % \section*{Acknowledgment}
