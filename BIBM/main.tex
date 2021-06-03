@@ -58,69 +58,65 @@ High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines
 With the drastically increasing of scRNA-seq data volume, the processing speed and file input/output (IO) have become a bottleneck of the performance of traditional tools. 
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
-The STAR aligner was encapsulated as a shared object. % and invoked the shared object as our aligner. 
-In order to avoid unneccessary disk access while reading FASTQ file and writing SAM file, we used Java Native Interface (JNI) to deliver FASTQ RDD's data, and then abstract return value to SAM RDD. 
-By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading intermediate results. 
+The STAR aligner was encapsulated as a shared object【这个shared object是专业术语吗?】.. % and invoked the shared object as our aligner. 
+In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD's data, and then extracted return values to SAM RDD. 
+By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading temporary results. 
 We build spark's cluster on Aliyun to test scSpark. 
-The experimental results indicate that scSpark is more efficient and more scalable than any tradition tool. 
+The experimental results indicate that scSpark is more efficient and more scalable than any available tool. 
 \end{abstract}
 
 \begin{IEEEkeywords}
 % Intermediate Data, Fast, Scalable
-scRNA-seq data processing, Apache Spark, cloud computing
+scRNA-seq data preprocessingg, Apache Spark, cloud computing
 \end{IEEEkeywords}
 
 \section{Introduction}
 % Individual cells are the smallest unit of life, such as tissues and organs.
 % According to the central dogma of molecular biology, one of the major factors that determines the function of every cell is its transcriptional program.
-In the era of precision medicine, scientific experiments to explore the function of each cell have become crucial. 
-In the past decade, RNA-seq has been widely used to study gene expression patterns. 
-However, the analysis accuracy of RNA-seq could only reach the level of the cell population, and the final difference between samples was the average difference of the cell population. 
-But from the molecular point of view, human cells are not exactly the same, there are differences between cells. 
-Single-cell RNA sequencing essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
+Single cell is the fundamental operative unit of a living organism. In the era of precision medicine, exploring the gene expression at single cell level has become crucial. 
+【待修改In the past decade, RNA-seq has been widely used to study gene expression patterns. 
+However, the analysis accuracy of RNA-seq could only reach the level of the cell population, and the final difference between samples was the average difference of the cell population.】 
+【But from the molecular point of view, human cells are not exactly the same, there are differences between cells.】 
+Single-cell RNA sequencing(scRNA-seq) essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
 
-High-throughput scRNA-seq protocols, which enable sequencing thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
+High-throughput(HT) scRNA-seq protocols, which enable sequencing thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
 % are the most popular strategies currently for scRNA-seq technology~\cite{Zhang2019ComparativeAO}. 
 Among them, Drop-seq~\cite{Macosko2015HighlyPG}, inDrop~\cite{Klein2015DropletBF} and 10X\cite{Zheng2017Massively} are the three most widely used protocols. 
-Among them, 10X is becoming one of the most prevalent platforms. 
-Two separate barcode, named cell barcode (CB) and unique molecular identifier (UMI) are introduced in scRNA-seq~\cite{Rosenberg2018SinglecellPO}~\cite{Cao2017ComprehensiveSC}. 
+Two important barcodes, named cell barcode (CB) and unique molecular identifier (UMI) are introduced in scRNA-seq~\cite{Rosenberg2018SinglecellPO}~\cite{Cao2017ComprehensiveSC}. 
 CB, which assigns different sequences to each cell for transcriptional source retrieval after sequencing, greatly increases the total length of sequence and reduces the cost of scRNA-seq~\cite{Macosko2015HighlyPG}~\cite{Klein2015DropletBF}. 
 These barcodes allow reads to be demultiplexed after the cells have been assembled for sequencing~\cite{Tian2018scPipe}.
-Apart from cell barcodes, UMIs are random oligonucleotide barcodes that are used in scRNA-seq experiments~\cite{Kivioja2012Counting}~\cite{Camara2017Methods}.
-By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished~\cite{Smith2017UMItools}.
+In addition to cell barcodes, UMIs are random oligonucleotide barcodes that are used in scRNA-seq experiments~\cite{Kivioja2012Counting}~\cite{Camara2017Methods}.
+【待修改By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished】~\cite{Smith2017UMItools}.
 
 In the scRNA-seq experiment, the use of multi-level barcodes presented additional challenges for data processing, which was quite different from traditional bulk RNA-seq and low-throughput scRNA-seq experiments. 
 In recent years, researchers have developed multiple scRNA-seq data processing tools, typically implementing steps including sequence quality control, genome alignment, and transcript counting to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
-The first step will filter FASTQ readings with low quality CB based on user-defined thresholds. 
-This step eliminates most of the false CBs, greatly improving the accuracy of the CBs that need to be considered for counting and reducing the number of CBs in further step. 
+The first step is filtering FASTQ readings with low quality CB based on user-defined thresholds. 
+This step eliminates most of the false CBs, greatly improving the accuracy of the CBs that need to be considered for counting and reducing the number of CBs. 
 The remaining FASTQ reads will map to genomes using the splice-aware aligner, such as STAR~\cite{Dobin2013STAR} or HISAT2~\cite{Kim2015HISAT}. 
-Among them, STAR is the most widely used. A number of popular scRNA-seq data processing tools use STAR for this step, such as UMI-Tools, CellRanger, zumis, scPipe, and STARsolo. 
+Among them, STAR is the most widely used. A number of popular scRNA-seq data processing tools use STAR for mapping, such as UMI-Tools, CellRanger, zumis, scPipe, and STARsolo. 
 Previous baseline studies have shown that STAR is one of the most reliable reference genomic aligner for RNA-Seq analysis~\cite{Baruzzo2017SimulationbasedCB}. 
-Next, reads are assigned to genes and then generate count tables for UMIs and reads per gene per CB~\cite{Parekh2018zUMIs}. 
+Next, reads are assigned to genes and count matrices for UMIs are generated.~\cite{Parekh2018zUMIs}. 
 
-Nowadays, there are many tools to deal with scRNA-seq, among which the most popular is CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools} and STARsolo~\cite{Blibaum2019STARsolo}. 
-UMI-tools~(\url{https://github.com/CGATOxford/UMI-tools}) is an open source tool with an impressively clear process, our ScSpark is based on improvements to this tool.
+Nowadays, there are many tools to preprocess scRNA-seq, among which the most popular is CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools} and STARsolo~\cite{Blibaum2019STARsolo}. 
 CellRanger is a highly integrated data process software tailored by 10X Genomics for single-cell RNA sequencing analysis and it performs comparatively well on machine with enough CPU and memory resources in the big data set, but did badly in small data set. CellRanger performs best under large data sets among existing tools~\cite{Gao2020Comparison}.
+UMI-tools~(\url{https://github.com/CGATOxford/UMI-tools}) is an open source tool with an impressively clear process.
 STARsolo~\cite{Blibaum2019STARsolo} has improved the parallelism of sequence mapping and counting procedures, and achieved good performance on a single machine.
-It is a pity that all tradition tools only run on a single machine with slow running speed, and cannot be extended to multiple nodes.
+It is a pity that all avaliable tools only run on a single machine with slow running speed, and cannot be extended to multiple nodes.
 
 There have been many studies using big data framework like Hadoop~(\url{https://hadoop.apache.org}) and Spark~(\url{https://spark.apache.org/}) to optimize Next Generation Sequencing (NGS) Data Processing. 
 Due to more efficiency in utilizing memory computing, Spark is a better big data computing framework than Hadoop's MapReduce~\cite{Dean2008MapReduce, Zaharia2012Resilient}. 
-SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks that both improve the efficiency of NGS data processing by Spark. 
-In the research area of scRNA-seq, Falco~\cite{Yang2017Falco} has tried to use Spark in scRNA-seq upstream data processing, but it has two serious problems. 
+SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spart for improving the efficiency of NGS data processing. 
+Falco~\cite{Yang2017Falco} has tried to use Spark in scRNA-seq data preprocessing, but it has two limitations. 
 
-Firstly, Falco can't deal with CBs and UMIs, so it is incompatible with any HTscRNA-seq protocol.
-Secondly, Falco only uses Spark to simply concatenate the aligner software and the feature quantitative software, which does not reduce the amount of disk reads and writes between the two steps.
+Firstly, Falco can't deal with CBs and UMIs, so it is incompatible with any HT scRNA-seq protocol.
+Secondly, Falco only uses Spark to simply concatenate the aligner and the feature quantitative softwares, which does not reduce the amount of disk reads and writes during alignment and transcript counting.
 Falco’s operations have lots of redundancy disk access which causes its insufficient utilization of Spark’s in-memory computation well. 
 
-The increase of scRNA-seq data requires more efficient and faster data processing tools. However, the original scRNA-seq data processing tools were designed without considering of the scalability, which could only run on a single computer and could not be extended to a cluster. From UMI-Tools and CellRanger to STARsolo, parallelism and performance has increased; However, due to the limit of a single machine, scalability is limited. 
-
-Refer to Falco's idea of using Spark framework to solve the problem of HTscRNA-seq data processing, we make full use of Spark's parallel and in memory compute advantage, totally use Spark's function to implement sequence quality control but not like Falco use tradition pipeline. 
-And different with Falco, we enhance STAR's file I/O interface, to reduce redundant disk access.
-In the end, scSpark has implemented transcript counting by combining Spark function and our algorithm to achieve parallel compute. 
-The traditional single machine serial processing mode has been unable to meet the demand of computing and storage resources for super-large scale scRNA-seq data. 
-Our work plans to adopt Spark system architecture propose a set of in memory computing and scalable scRNA-seq data processing tool, which can significantly reduce the processing time. 
-
+The increase of scRNA-seq datasets require more efficient and faster data processing tools. However, the current scRNA-seq data preprocessing tools were designed without considering of the scalability, which could only run on a single computer and could not be extended to a cluster. From UMI-Tools and CellRanger to STARsolo, parallelism and performance has increased; However, due to the limit of a single machine, all of them have no scalability . 
+The traditional single machine serial processing mode has been unable to meet the demand of computing and storage resources for super-large scale scRNA-seq data.
+Different with Falco, we enhanced STAR's file I/O interface to reduce redundant disk access.
+In the end, to achieve parallel and in-memory computing, scSpark implemented transcript counting by combining Spark function and our algorithm【which?】
+Our work utilized Spark system architecture to develop a quick and scalable scRNA-seq data preprocessing tool. 
 \section{Method}
 \subsection{Overview}
 We implemented scSpark based on Spark framework to utilize Spark's advantage. 
