@@ -252,10 +252,10 @@ These results show that scSpark's scalability has great improvement.
   \includegraphics[width=0.5\textwidth]{fig5.pdf}
   \caption{Each step consumes time.} \label{fig5}
 \end{figure}
-We also record each step's process time to know the reason of our improve and where can improve in future.
-As shown in Fig~\ref{fig5}, we found our program's scalability most come from the align step and the align consumes most time in the whole program.
-To find the reason why the align step is more scalability than the other step and why the scalability have a ceiling, we count how much records scSpark's STAR program can process.
-We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data volume size and small volume dataset will lost its scalability earier than large volume dataset.
+We also recorded each step's process time to know the reason of the improvement.
+As shown in Fig~\ref{fig5}, we found our program's scalability mainly came from the alignment step, which consumed most time in the whole program.
+Next, we counted how much records scSpark's STAR program can process.
+We found that, as shown in Fig~\ref{fig6}, STAR's mapping speed was influenced by the data size and dataset with small size will lost its scalability earier than those with large size.
 \begin{figure}
   \includegraphics[width=0.5\textwidth]{fig6.pdf}
   \caption{Invoked STAR's mapping step.} \label{fig6}
@@ -263,7 +263,7 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
 
 \begin{table}
     \centering
-    \caption{Processing speed w.r.t. data volume}\label{tab3}
+    \caption{Processing speed w.r.t. data size}\label{tab3}
     \begin{tabular}{|l | l | l | l | l|}
     \hline
     Volume (million reads) & 10 & 50 & 100 & 640 \\
@@ -273,15 +273,15 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
     \end{tabular}
   \end{table}
   
-  Then we test STAR program, and find the mapping speed is influenced by data volume. 
-  As Table~\ref{tab3} shown, STAR mapping speed will increase when the data volume increase. 
-  So when we get scalability by increase partition, each partition's read number decrease will limit the scalability increase. 
+  Then we tested STAR program, and found the mapping speed was also influenced by data size. 
+  As Table~\ref{tab3} shown, 【STAR mapping speed increased when the data volume increase 数据量增加，比对速度增加？】. 
+  So when we got scalability by increasing partition, each partition's read number decreased and it would limit the scalability improvement. 
   
   \subsection{Performance Analysis}
-  We tested performance to find bottleneck of our scSpark.
-  We used 640 millions records of FASTQ data to evaluate two aspect of our scSpark.
-  First we compared scSpark spend in network shuffle, disk access and compute time proportion to find whether network shuffle or disk access occupies too much time.
-  Second we tested CPU and memory usage, to ensure which resources will be scSpark's bottleneck.
+  We tested performance to find the bottleneck of scSpark.
+  We used 640 millions records of FASTQ data to evaluate two aspects of scSpark.
+  First we compared network shuffle and disk access spend by scSpark and compute proportions of time, which helped to find whether network shuffle or disk access occupies too much time.
+  Secondy, we tested CPU and memory usage, to ensure which resources would cause scSpark's bottleneck.
   
   \subsubsection{Network and disk behavior}
   \begin{figure}
@@ -291,9 +291,9 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
   We computed network time by summing up the time that our scSpark shuffle data in multi machine. 
   Disk access comes from loading FASTQ, STAR's index and GTF files. 
   The ideal situation is tasks did not waste any time in disk access and network shuffle. 
-  We found that scSpark's computing time occupies most execute time. 
-  Except STAR's index file, all file's disk access distribute to each node that improve whole system's loading speed. 
-  And we found the time that waste in shuffling doesn't occypy too much time. 
+  We found that scSpark's computing time occupied most execute time. 
+  Except STAR's index file, all files' disk access distributed to each node would improve whole system's loading speed. 
+  And we found the time that waste in shuffling doesn't occupy too much time. 
   
   \subsubsection{CPU and memory usage}
   \begin{figure}
@@ -302,37 +302,36 @@ We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data vo
   \end{figure}
   We monitored scSpark's CPU and memory usage during processing. 
   As Fig~\ref{fig8} shown, in sequence quality control step, scSpark highly exploited each node's multi cores CPU to achieve speedup. 
-  Convenition pipelines single thread solution's CPU usage is much lower than scSpark. 
-  And we found that scSpark's boundary much comes from genome alignment.
+  Other pipelines' single thread solution's CPU usage is much lower than scSpark. 
+  We found that scSpark's boundary mainly came from genome alignment.
   Because we invoked STAR as our alignment tool, and STAR's program naturally occupy most proportion of memory in this step.
   
   \subsubsection{Biological verification}
-  Our scSpark is developed based on UMI-tools. 
-  And UMI-tools accuracy was fully verified. 
-  This section we uses the gene expression matrix obtained by scSpark and UMI-tools under the same dataset to perform downstrema analysis of scRNA-seq data. 
-  And then we compared two tools transcript analysis's result and cell cluster analysis's result to verify the correlation between scSpark and UMI-tools. 
-  Under hgmm-1k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation. 
-  As Fig~\ref{fig9} shown, for each after processing cell barcode, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998. 
+  ScSpark is developed based on UMI-tools, which has been fully verified in terms of accuracy. 
+  This section we used the gene expression matrix obtained by scSpark and UMI-tools to perform downstream analysis of scRNA-seq data. 
+  We compared transcript counting results and clusters of cells in the hgmm-1k-v3 dataset to verify the correlation between scSpark and UMI-tools. 
+  
+  As Fig~\ref{fig9} shown, for each after processing cell barcode【？描述清楚是用哪些数值做相关性的。所有细胞的表达量吗？】, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998【相关系数的表示coefficient】. 
   \begin{figure}
     \includegraphics[width=0.5\textwidth]{fig9.pdf}
-    \caption{correlation of scSpark and UMI-tools.} \label{fig9}
+    \caption{The correlation of transcript counting results for scSpark and UMI-tools.} \label{fig9}
   \end{figure}
-  Furthermore, we used Seurat to print tSNE picture which based on gene expression matrix generated by ScSpark and UMI-tools. 
-  And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleation between ScSpark and UMI-tools. 
+  Furthermore, we used Seurat to obtain tSNE plots for the visualization of cell clusters. 
+  And as Fig~\ref{fig10} shown, the overlapping frequence of cell clustering results were 【?】.【这里没有用相关性计算，可以计算每个细胞亚群的交叠比例，理论上应该是100%，参考鑫威那边毕业论文比较聚类结果的表述】 
   \begin{figure*}
     \includegraphics[width=\textwidth]{fig10.pdf}
-    \caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig10}
+    \caption{tSNE plots based on scSpark and UMI-tools' gene expression matrices.} \label{fig10}
   \end{figure*}
   \section{Conclusion}
   In this paper, we proposed a way to utilize Apache Spark's in memory compute trait and achieved considerable speedup and scalability. 
-  Our scSpark can take advantages of multi machine compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
+  Our scSpark can take advantages of multi-machines【这边的专业术语？】 compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
   
   In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and 【待修改：it closes to linear improve.】
   Moreover,scSpark can improve scalability by increasing partition number if the resource is sufficient.
   
   And we also found our scSpark's scalability improvement has a ceiling. 
-  The reason is that our scSpark invokes STAR's mapping speed is influenced by loading index time. 
-  And if data volume is tiny, the influence occupies a large proportion of whole the STAR program process time. 
+  The reason is that our scSpark invokes STAR's mapping speed, which is influenced by loading index time. 
+  And if data size is tiny, the influence occupies a large proportion of whole the STAR program process time. 
 
 % \section*{Acknowledgment}
 
