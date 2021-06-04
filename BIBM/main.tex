@@ -55,7 +55,7 @@ email address or ORCID}
 
 \begin{abstract}
 High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines typically adopt multiple modules to transform raw scRNA-seq data to gene expression matrices, including sequence quality control, genome alignment and transcript counting. 
-With the drastically increasing of scRNA-seq data volume, the processing speed and file input/output (IO) have become a bottleneck of the performance of traditional tools. 
+With the drastically increasing of scRNA-seq data size, the processing speed and file input/output (IO) have become a bottleneck of the performance of traditional tools. 
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
 The STAR aligner was encapsulated as a shared object【这个shared object是专业术语吗?】.. % and invoked the shared object as our aligner. 
@@ -119,28 +119,27 @@ In the end, to achieve parallel and in-memory computing, scSpark implemented tra
 Our work utilized Spark system architecture to develop a quick and scalable scRNA-seq data preprocessing tool. 
 \section{Method}
 \subsection{Overview}
-We implemented scSpark based on Spark framework to utilize Spark's advantage. 
-We run program across the cluster, and default cache data in memory. 
-With increasing of dataset volume, the time to process intermediate result file occupies a more significant proportion on total time. 
-And single machine's capacity is not sufficient to adapt the increasing scRNA-seq data volume. 
-Therefore, reducing the disk access of intermediate result file and improving the upstream data process's scalability is our scSpark's way to improve tradition pipeline. 
-
+We implemented sequence quality control, genome alignment, and transcript counting based on Spark framework. 
+We run program across the cluster and default cache data in memory. 
+Single machine's capacity is not sufficient to adapt the increasing scRNA-seq data size and the time to process intermediate files occupies a more significant proportion on total time. 
+Therefore, reducing the disk access of intermediate files and improving the upstream data process's scalability is the main way to improve avaliable pipelines. 
+ScSpark is based on UMI-tools.
 \subsection{Sequence quality control}
 \begin{figure}
   \includegraphics[width=0.5\textwidth]{fig1.pdf}
-  \caption{An overview of Spark version sequence quality control.} \label{fig1}
+  \caption{An overview of sequence quality control module based on Spark.} \label{fig1}
 \end{figure} 
 
-Large FASTQ file can load files in each node's memory parallel therefore the loading speed doesn't limit by single node disk access speed. 
-As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, generate whitelist which can identity of the true cell barcodes is unknown and then use the whitelist to filter FASTQ R1 and then extract FASTQ R2 according to filtered FASTQ R1's index. 
+Large FASTQ files can be loaded in each node's memory parallel and the loading speed doesn't limit by single node disk access speed. 
+As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, 【待修改generate whitelist including identity of the true cell barcodes is unknown【?】 and then use the whitelist to filter FASTQ R1 and then extract FASTQ R2 according to filtered FASTQ R1's index.】
 
-We loaded each file splits of FASTQ R1 to memory, and abstract them as FASTQ R1 RDD. 
-Then we counted each CB appear times, and selected the most frequent CBs as intermediate result which named whitelist RDD. 
-By using reduceByKey function, FASTQ R1 RDD can count every barcodes parallel in each splits and sum each split's result in the end. 
-After that we can use the result to generate whitelist RDD by Spark's sort and take function, both can parallel compute in the cluster. 
-We can easily get filtered FASTQ R1 RDD, by using the join function to find which read's cell barcode is in the whitelist RDD. 
+We loaded each file splits of FASTQ R1 to memory, and abstract【替换为更加合适的词 merge?】 them as FASTQ R1 RDD. 
+Then we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate result. 
+By using reduceByKey function, each barcode could be counted parallelly in each split of FASTQ R1 RDD and we coould merge each split's result in the end. 
+After that we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster. 
+The filtered FASTQ R1 RDD could be easily got by using the join function to find which read's cell barcode is in the whitelist RDD. 
 And then we used filter function to extract FASTQ R2 RDD. 
-The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with same index. 
+The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
 
 \subsection{Eleminate redundancy disk access in aligmnent}
 \begin{figure}
@@ -149,13 +148,13 @@ The last step in sequence quality control was using join function again to combi
 \end{figure}
 
 Apart from Cellranger we can't know how it implements because it isn't an open source software. 
-In tradition pipeline, STAR need load extracted FASTQ R2 file or load FASTQ R1 file, FASTQ R2 file and whitelist file that actually will generate unneccessary disk access. 
-We choose STAR as our aligner but modify how STAR loads FASTQ file to avoid load extracted FASTQ R2 and FASTQ R1 twice. 
+In previous pipeline, STAR needs to load extracted FASTQ R2 file or FASTQ R1 file. FASTQ R2 file and whitelist file will generate unneccessary disk access. 
+We choose STAR as our aligner but avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
 As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process. 
-To overcome node's data volume imbalance problem, we repartition the extracted FASTQ R2 RDD, and then each node can run STAR parallel and with counterpoise data volume. 
-We also find if node's in memory is enough, we can start up more than one STAR's in one node to achieve better parallel. 
-STAR's result SAM or BAM file generate more disk access waste than STAR's input, we refer STAR-solo's solution to solve the problem by combining aligner and count. 
-We use Java Native Interface again to transfer STAR result and directly abstract them to SAM RDD. 
+To overcome imbalance problem of node's data volume, we repartitioned the extracted FASTQ R2 RDD, and then each node could run STAR parallelly with counterpoise data volume. 
+We also found if node's in memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing. 
+The SAM or BAM file as STAR's output could generate more disk access waste than STAR's input. Here, we refered STAR-solo's solution to solve the problem by combining aligner and count. 
+We used Java Native Interface again to transfer STAR results and directly abstract【替换为更加合适的词】 them to SAM RDD. 
 This operation is parallel and totally in memory. 
 
 \subsection{Count with multi-node}
@@ -165,12 +164,12 @@ This operation is parallel and totally in memory.
   \caption{An overview of Spark version count.} \label{fig3}
 \end{figure}
 
-As shown in Fig~\ref{fig3}, to take advantage multi-node's compute capability, we used a new way to implement count step. 
-Except SAM RDD that generate in the previous step, we loaded GTF file to memory and abstract them as GTF RDD. 
-Then we grouped SAM RDD and GTF RDD by their cell name and due to different cell's record can't influence the other's count. 
-Then we used flatMap function to parallel compute each cell's read count. 
-In the end, we collected result in all nodes, and the result files will produce the only output disk access in the whole program. 
-ScSpark breaks the limitation of one node's compute and can scale easily. 
+As shown in Fig~\ref{fig3}, to take advantage of multi-node's compute capability, we used a new way to implement the count step. 
+Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract【替换为更加合适的词】 them as GTF RDD. 
+Then we grouped SAM RDD and GTF RDD according to their cell name. 
+Then we used flatMap function to parallelly compute each cell's read count. 
+In the end, we collected results in all nodes, and the result files would produce the only output disk access in the whole program. 
+ScSpark breaks the limitation of one node's computing and achieved large scalability. 
 
 \section{Results}
 We evaluated the speed, scalabilty and compare each step's scalability of scSpark in this section. 
