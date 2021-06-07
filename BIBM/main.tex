@@ -58,8 +58,8 @@ High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines
 With the drastically increasing of scRNA-seq data size, the processing speed and file input/output (IO) have become a bottleneck of the performance of available tools. 
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
-The STAR aligner was encapsulated as a shared object【这个shared object是专业术语吗?】.. % and invoked the shared object as our aligner. 
-In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD's data, and then extracted return values to SAM RDD. 
+%The STAR aligner was encapsulated as a shared object【这个shared object是专业术语吗?---》放在方法里面描述即可，没必要在摘要里面写出来】.. % and invoked the shared object as our aligner. 
+In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD's 【缩写全称】data, and then extracted return values to SAM RDD. 
 By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading temporary results. 
 We build spark's cluster on Aliyun to test scSpark. 
 The experimental results indicate that scSpark is more efficient and more scalable than any available tool. 
@@ -73,11 +73,7 @@ scRNA-seq data preprocessingg, Apache Spark, cloud computing
 \section{Introduction}
 % Individual cells are the smallest unit of life, such as tissues and organs.
 % According to the central dogma of molecular biology, one of the major factors that determines the function of every cell is its transcriptional program.
-Single cell is the fundamental operative unit of a living organism. In the era of precision medicine, exploring the gene expression at single cell level has become crucial. 
-【待修改In the past decade, RNA-seq has been widely used to study gene expression patterns. 
-However, the analysis accuracy of RNA-seq could only reach the level of the cell population, and the final difference between samples was the average difference of the cell population.】 
-【But from the molecular point of view, human cells are not exactly the same, there are differences between cells.】 
-Single-cell RNA sequencing(scRNA-seq) essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
+Single cell is the fundamental operative unit of a living organism. In the era of precision medicine, exploring the gene expression at single cell level has become crucial. In the past decade, RNA-seq has been widely used to study gene expression patterns. However, the analysis accuracy of RNA-seq could only reach the average level of the cell population.  Single-cell RNA sequencing(scRNA-seq) essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
 
 High-throughput(HT) scRNA-seq protocols, which enable sequencing thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
 % are the most popular strategies currently for scRNA-seq technology~\cite{Zhang2019ComparativeAO}. 
@@ -86,7 +82,7 @@ Two important barcodes, named cell barcode (CB) and unique molecular identifier 
 CB, which assigns different sequences to each cell for transcriptional source retrieval after sequencing, greatly increases the total length of sequence and reduces the cost of scRNA-seq~\cite{Macosko2015HighlyPG}~\cite{Klein2015DropletBF}. 
 These barcodes allow reads to be demultiplexed after the cells have been assembled for sequencing~\cite{Tian2018scPipe}.
 In addition to cell barcodes, UMIs are random oligonucleotide barcodes that are used in scRNA-seq experiments~\cite{Kivioja2012Counting}~\cite{Camara2017Methods}.
-【待修改By UMI, the same copy from different molecules and the same copy from the same molecule for PCR amplification could be distinguished】~\cite{Smith2017UMItools}.
+By UMI, we could distinguish the same copies located in different molecules from those in the same molecule for PCR amplification ~\cite{Smith2017UMItools}.
 
 In the scRNA-seq experiment, the use of multi-level barcodes presented additional challenges for data processing, which was quite different from traditional bulk RNA-seq and low-throughput scRNA-seq experiments. 
 In recent years, researchers have developed multiple scRNA-seq data processing tools, typically implementing steps including sequence quality control, genome alignment, and transcript counting to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
@@ -131,10 +127,10 @@ ScSpark is based on UMI-tools.
 \end{figure} 
 
 Large FASTQ files can be loaded in each node's memory parallel and the loading speed doesn't limit by single node disk access speed. 
-As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, 【待修改generate whitelist including identity of the true cell barcodes is unknown【?】 and then use the whitelist to filter FASTQ R1 and then extract FASTQ R2 according to filtered FASTQ R1's index.】
+As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, i)generating a whitelist including identities of the true cell barcodes is unknown and ii)filtering FASTQ R1 with the whitelist and extracting FASTQ R2 according to filtered FASTQ R1's index.
 
 We loaded each file splits of FASTQ R1 to memory, and abstract【替换为更加合适的词 merge?】 them as FASTQ R1 RDD. 
-Then we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate result. 
+Then we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate results. 
 By using reduceByKey function, each barcode could be counted parallelly in each split of FASTQ R1 RDD and we coould merge each split's result in the end. 
 After that we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster. 
 The filtered FASTQ R1 RDD could be easily got by using the join function to find which read's cell barcode is in the whitelist RDD. 
@@ -236,7 +232,7 @@ For the same reason, scSpark's countting step also got considerable improvement.
 \subsection{Scalability Evalution}
 \begin{figure}
   \includegraphics[width=0.5\textwidth]{fig4.pdf}
-  \caption{An overview of Spark version filtering.} \label{fig4}
+  \caption{An overview of Spark version filtering.} \label{fig4} 【注意修改图之后，图例要相应改变】
 \end{figure}
 ScSpark's second advantage is that it could get near linear improvement when the cluster's CPU core number increased. 
 To test the scalability, we used 16 CPU cores performance as previous pipeline's baseline and 64 CPU cores performance as scSpark's baseline. 
@@ -274,7 +270,7 @@ We found that, as shown in Fig~\ref{fig6}, STAR's mapping speed was influenced b
   \end{table}
   
   Then we tested STAR program, and found the mapping speed was also influenced by data size. 
-  As Table~\ref{tab3} shown, 【STAR mapping speed increased when the data volume increase 数据量增加，比对速度增加？】. 
+  As Table~\ref{tab3} shown, the speed of STAR mapping increased when the size of data increase. 
   So when we got scalability by increasing partition, each partition's read number decreased and it would limit the scalability improvement. 
   
   \subsection{Performance Analysis}
@@ -326,7 +322,7 @@ We found that, as shown in Fig~\ref{fig6}, STAR's mapping speed was influenced b
   In this paper, we proposed a way to utilize Apache Spark's in memory compute trait and achieved considerable speedup and scalability. 
   Our scSpark can take advantages of multi-machines【这边的专业术语？】 compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
   
-  In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and 【待修改：it closes to linear improve.】
+  In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and 【待修改：it closes to linear improvement.】
   Moreover,scSpark can improve scalability by increasing partition number if the resource is sufficient.
   
   And we also found our scSpark's scalability improvement has a ceiling. 
