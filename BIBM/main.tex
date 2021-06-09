@@ -58,7 +58,7 @@ High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines
 With the drastically increasing of scRNA-seq data size, the processing speed and file input/output (IO) have become a bottleneck of the performance of available tools. 
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
-In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD's 【缩写全称】data, and then extracted return values to SAM RDD. 
+In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD(Resilient Distributed Datasets)'s data, and then extracted return values to SAM RDD. 
 By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading temporary results. 
 We build spark's cluster on Aliyun to test scSpark. 
 The experimental results indicate that scSpark is more efficient and more scalable than any available tool. 
