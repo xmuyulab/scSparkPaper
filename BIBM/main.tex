@@ -58,7 +58,6 @@ High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines
 With the drastically increasing of scRNA-seq data size, the processing speed and file input/output (IO) have become a bottleneck of the performance of available tools. 
 We took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based pipeline, named scSpark. 
 We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
-%The STAR aligner was encapsulated as a shared object【这个shared object是专业术语吗?---》放在方法里面描述即可，没必要在摘要里面写出来】.. % and invoked the shared object as our aligner. 
 In order to avoid unneccessary disk access while reading FASTQ files and writing SAM files, we used Java Native Interface (JNI) to deliver FASTQ RDD's 【缩写全称】data, and then extracted return values to SAM RDD. 
 By distributing scRNA-seq data and process tasks in the cluster, the scSpark toolkit can significantly reduce disk access for saving and loading temporary results. 
 We build spark's cluster on Aliyun to test scSpark. 
@@ -66,13 +65,10 @@ The experimental results indicate that scSpark is more efficient and more scalab
 \end{abstract}
 
 \begin{IEEEkeywords}
-% Intermediate Data, Fast, Scalable
-scRNA-seq data preprocessingg, Apache Spark, cloud computing
+scRNA-seq data preprocessing, Apache Spark, cloud computing
 \end{IEEEkeywords}
 
 \section{Introduction}
-% Individual cells are the smallest unit of life, such as tissues and organs.
-% According to the central dogma of molecular biology, one of the major factors that determines the function of every cell is its transcriptional program.
 Single cell is the fundamental operative unit of a living organism. In the era of precision medicine, exploring the gene expression at single cell level has become crucial. In the past decade, RNA-seq has been widely used to study gene expression patterns. However, the analysis accuracy of RNA-seq could only reach the average level of the cell population.  Single-cell RNA sequencing(scRNA-seq) essentially reveals the transcriptional status at the single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}. 
 
 High-throughput(HT) scRNA-seq protocols, which enable sequencing thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
@@ -129,7 +125,7 @@ ScSpark is based on UMI-tools.
 Large FASTQ files can be loaded in each node's memory parallel and the loading speed doesn't limit by single node disk access speed. 
 As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, i)generating a whitelist including identities of the true cell barcodes is unknown and ii)filtering FASTQ R1 with the whitelist and extracting FASTQ R2 according to filtered FASTQ R1's index.
 
-We loaded each file splits of FASTQ R1 to memory, and abstract【替换为更加合适的词 merge?】 them as FASTQ R1 RDD. 
+We loaded each file splits of FASTQ R1 to memory, and abstract them as FASTQ R1 RDD. 
 Then we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate results. 
 By using reduceByKey function, each barcode could be counted parallelly in each split of FASTQ R1 RDD and we coould merge each split's result in the end. 
 After that we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster. 
@@ -146,11 +142,12 @@ The last step in sequence quality control was using join function again to combi
 Apart from Cellranger we can't know how it implements because it isn't an open source software. 
 In previous pipeline, STAR needs to load extracted FASTQ R2 file or FASTQ R1 file. FASTQ R2 file and whitelist file will generate unneccessary disk access. 
 We choose STAR as our aligner but avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
-As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process. 
+As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process.
+The STAR aligner was encapsulated as a shared object and invoked the shared object as our aligner. 
 To overcome imbalance problem of node's data volume, we repartitioned the extracted FASTQ R2 RDD, and then each node could run STAR parallelly with counterpoise data volume. 
 We also found if node's in memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing. 
 The SAM or BAM file as STAR's output could generate more disk access waste than STAR's input. Here, we refered STAR-solo's solution to solve the problem by combining aligner and count. 
-We used Java Native Interface again to transfer STAR results and directly abstract【替换为更加合适的词】 them to SAM RDD. 
+We used Java Native Interface again to transfer STAR results and directly abstract them to SAM RDD. 
 This operation is parallel and totally in memory. 
 
 \subsection{Count with multi-node}
@@ -161,7 +158,7 @@ This operation is parallel and totally in memory.
 \end{figure}
 
 As shown in Fig~\ref{fig3}, to take advantage of multi-node's compute capability, we used a new way to implement the count step. 
-Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract【替换为更加合适的词】 them as GTF RDD. 
+Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract them as GTF RDD. 
 Then we grouped SAM RDD and GTF RDD according to their cell name. 
 Then we used flatMap function to parallelly compute each cell's read count. 
 In the end, we collected results in all nodes, and the result files would produce the only output disk access in the whole program. 
@@ -232,7 +229,7 @@ For the same reason, scSpark's countting step also got considerable improvement.
 \subsection{Scalability Evalution}
 \begin{figure}
   \includegraphics[width=0.5\textwidth]{fig4.pdf}
-  \caption{An overview of Spark version filtering.} \label{fig4} 【注意修改图之后，图例要相应改变】
+  \caption{Pipeline Scalability.} \label{fig4}
 \end{figure}
 ScSpark's second advantage is that it could get near linear improvement when the cluster's CPU core number increased. 
 To test the scalability, we used 16 CPU cores performance as previous pipeline's baseline and 64 CPU cores performance as scSpark's baseline. 
@@ -307,22 +304,22 @@ We found that, as shown in Fig~\ref{fig6}, STAR's mapping speed was influenced b
   This section we used the gene expression matrix obtained by scSpark and UMI-tools to perform downstream analysis of scRNA-seq data. 
   We compared transcript counting results and clusters of cells in the hgmm-1k-v3 dataset to verify the correlation between scSpark and UMI-tools. 
   
-  As Fig~\ref{fig9} shown, for each after processing cell barcode【？描述清楚是用哪些数值做相关性的。所有细胞的表达量吗？】, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998【相关系数的表示coefficient】. 
+  As Fig~\ref{fig9} shown, for each after processing cell barcode, we compared our scSpark's result with UMI-tools' result, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998. 
   \begin{figure}
     \includegraphics[width=0.5\textwidth]{fig9.pdf}
     \caption{The correlation of transcript counting results for scSpark and UMI-tools.} \label{fig9}
   \end{figure}
   Furthermore, we used Seurat to obtain tSNE plots for the visualization of cell clusters. 
-  And as Fig~\ref{fig10} shown, the overlapping frequence of cell clustering results were 【?】.【这里没有用相关性计算，可以计算每个细胞亚群的交叠比例，理论上应该是100%，参考鑫威那边毕业论文比较聚类结果的表述】 
+  And as Fig~\ref{fig10} shown, the overlapping frequence of cell clustering results were 【?】.【这里没有用相关性计算，可以计算每个细胞亚群的
   \begin{figure*}
     \includegraphics[width=\textwidth]{fig10.pdf}
     \caption{tSNE plots based on scSpark and UMI-tools' gene expression matrices.} \label{fig10}
   \end{figure*}
   \section{Conclusion}
   In this paper, we proposed a way to utilize Apache Spark's in memory compute trait and achieved considerable speedup and scalability. 
-  Our scSpark can take advantages of multi-machines【这边的专业术语？】 compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
+  Our scSpark can take advantages of multi-machine compute capacity to speedup key steps of scRNA-seq preprocessing and eliminate redundant disk access. 
   
-  In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and 【待修改：it closes to linear improvement.】
+  In addition to performance improvement, scSpark also show much more scalable than any previous pipeline and its speed closes to linear improvement.
   Moreover,scSpark can improve scalability by increasing partition number if the resource is sufficient.
   
   And we also found our scSpark's scalability improvement has a ceiling. 
