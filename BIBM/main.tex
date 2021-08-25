@@ -94,29 +94,6 @@
 % http://www.ctan.org/pkg/amsmath
 
 
-
-
-
-% *** SPECIALIZED LIST PACKAGES ***
-%
-%\usepackage{algorithmic}
-% algorithmic.sty was written by Peter Williams and Rogerio Brito.
-% This package provides an algorithmic environment fo describing algorithms.
-% You can use the algorithmic environment in-text or within a figure
-% environment to provide for a floating algorithm. Do NOT use the algorithm
-% floating environment provided by algorithm.sty (by the same authors) or
-% algorithm2e.sty (by Christophe Fiorio) as the IEEE does not use dedicated
-% algorithm float types and packages that provide these will not provide
-% correct IEEE style captions. The latest version and documentation of
-% algorithmic.sty can be obtained at:
-% http://www.ctan.org/pkg/algorithms
-% Also of interest may be the (relatively newer and more customizable)
-% algorithmicx.sty package by Szasz Janos:
-% http://www.ctan.org/pkg/algorithmicx
-
-
-
-
 % *** ALIGNMENT PACKAGES ***
 %
 %\usepackage{array}
@@ -162,30 +139,6 @@
 % http://www.ctan.org/pkg/subfig
 
 
-
-
-% *** FLOAT PACKAGES ***
-%
-%\usepackage{fixltx2e}
-% fixltx2e, the successor to the earlier fix2col.sty, was written by
-% Frank Mittelbach and David Carlisle. This package corrects a few problems
-% in the LaTeX2e kernel, the most notable of which is that in current
-% LaTeX2e releases, the ordering of single and double column floats is not
-% guaranteed to be preserved. Thus, an unpatched LaTeX2e can allow a
-% single column figure to be placed prior to an earlier double column
-% figure.
-% Be aware that LaTeX2e kernels dated 2015 and later have fixltx2e.sty's
-% corrections already built into the system in which case a warning will
-% be issued if an attempt is made to load fixltx2e.sty as it is no longer
-% needed.
-% The latest version and documentation can be found at:
-% http://www.ctan.org/pkg/fixltx2e
-
-
-%\usepackage{stfloats}
-% stfloats.sty was written by Sigitas Tolusis. This package gives LaTeX2e
-% the ability to do double column floats at the bottom of the page as well
-% as the top. (e.g., "\begin{figure*}[!b]" is not normally possible in
 % LaTeX2e). It also provides a command:
 %\fnbelowfloat
 % to enable the placement of footnotes below bottom floats (the standard
@@ -320,27 +273,6 @@ E-mail: see http://www.michaelshell.org/contact.html
 \IEEEcompsocthanksitem J. Doe and J. Doe are with Anonymous University.}% <-this % stops an unwanted space
 \thanks{Manuscript received April 19, 2005; revised August 26, 2015.}}
 
-% note the % following the last \IEEEmembership and also \thanks - 
-% these prevent an unwanted space from occurring between the last author name
-% and the end of the author line. i.e., if you had this:
-% 
-% \author{....lastname \thanks{...} \thanks{...} }
-%                     ^------------^------------^----Do not want these spaces!
-%
-% a space would be appended to the last name and could cause every name on that
-% line to be shifted left slightly. This is one of those "LaTeX things". For
-% instance, "\textbf{A} \textbf{B}" will typeset as "A B" not "AB". To get
-% "AB" then you have to do: "\textbf{A}\textbf{B}"
-% \thanks is no different in this regard, so shield the last } of each \thanks
-% that ends a line with a % and do not let a space in before the next \thanks.
-% Spaces after \IEEEmembership other than the last one are OK (and needed) as
-% you are supposed to have spaces between the names. For what it is worth,
-% this is a minor point as most people would not even notice if the said evil
-% space somehow managed to creep in.
-
-
-
-% The paper headers
 \markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2015}%
 {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for Computer Society Journals}
 % The only time the second header will appear is for the odd numbered pages
@@ -556,7 +488,6 @@ Except performance evaluate, we splited three datasets to different volume to pr
 
 \section{Results}
 We evaluated the speed and scalabilty for each step of scSpark to show the advantage of scSpark compared with the available pipelines. 
-
 \subsection{Efficiency Evaluation}
 \begin{table}
 	\centering
@@ -571,17 +502,17 @@ We evaluated the speed and scalabilty for each step of scSpark to show the advan
 		UMI-tools & 1 & 64 cores & 7254 & 44160 \\
 		CellRanger & 1 & 64 cores & 6000 & 11700 \\
 		STAR-solo & 1 & 64 cores &  5820 & 8100 \\
-		scSpark & 1 & 4*16 cores & 354 & - \\
+		scSpark & 1 & 4*16 cores & 402 & - \\
 		& 1 & 16*16 cores & - & 841 \\
 		UMI-tools & 2 & 64 cores & 7254 & 44160 \\
 		CellRanger & 2 & 64 cores & 6000 & 11700 \\
 		STAR-solo & 2 & 64 cores &  5820 & 8100 \\
-		scSpark & 2 & 4*16 cores & 354 & - \\
+		scSpark & 2 & 4*16 cores & 396 & - \\
 		& 2 & 16*16 cores & - & 841 \\
 		UMI-tools & 3 & 64 cores & 7254 & 44160 \\
 		CellRanger & 3 & 64 cores & 6000 & 11700 \\
 		STAR-solo & 3 & 64 cores &  5820 & 8100 \\
-		scSpark & 3 & 4*16 cores & 354 & - \\
+		scSpark & 3 & 4*16 cores & 553 & - \\
 		& 3 & 16*16 cores & - & 841 \\
 		\hline
 	\end{tabular}
@@ -590,14 +521,14 @@ We evaluated the speed and scalabilty for each step of scSpark to show the advan
 Limited by single machine's CPU cores, we took 64 cores in preivous pipelines test.
 Table~\ref{tab1} shown a summary of all the pipelines's performance.
 We could see scSpark's speed is much more quick than any available pipeline in the same CPU cores environment.
-And scSpark could get improvement when the cluster's CPU cores number increased.
+And scSpark could get greater improvement when the cluster's CPU cores number increased.
 \begin{table}
 	\centering
 	\caption{Performance comparision for each step}\label{tab2}
 	\resizebox{0.45\textwidth}{!} {
 	\begin{tabular}{l | l | l | l | l | l}
 		\hline
-		System & Dataset & Cores & filter & align & count \\
+		System & Dataset & Cores & Barcode and UMI correct, filter & align & count \\
 		\hline
 		UMI-tools(100 million reads) & 1 & 64 cores & 9720 & 600 & 1740 \\
 		UMI-tools(640 million reads) & 1 & 64 cores & 33600 & 2160 & 8400 \\
@@ -609,21 +540,26 @@ And scSpark could get improvement when the cluster's CPU cores number increased.
 		scSpark(640 million reads) & 2 & 16*16 cores & 81 & 447 & 313 \\
 		UMI-tools(100 million reads) & 3 & 64 cores & 9720 & 600 & 1740 \\
 		UMI-tools(640 million reads) & 3 & 64 cores & 33600 & 2160 & 8400 \\
-		scSpark(100 million reads) & 3 & 4*16 cores & 31 & 270 & 53 \\
+		scSpark(100 million reads) & 3 & 4*16 cores & 117 & 402 & 34 \\
 		scSpark(640 million reads) & 3 & 16*16 cores & 81 & 447 & 313 \\
 		\hline
 	\end{tabular} }
 \end{table}
 We recorded each step's process time to know the reason of the speed's improvement.
-As table~\ref{tab2} shown, scSpark is much faster than the previous pipeline in any single step.
-We could see the most significant improvement came from the filtering step because we made a traditional single thread operation to parallelly computing in multi-machines's multi-cores.
-Between filter step and align step, we take advantage of Spark's in-memory compute trait eliminate redundancy extracted FASTQ file's disk access.
+As table~\ref{tab2} shown, scSpark is much faster than the previous pipelines in any single step.
+Contrast with UMI-tools, We could see scSpark gets great improve in the first two steps, barcode correct and filter.
+This step's improve comes from using in memory trait to reduce disk access times and take advantage of Spark's high concurrency feature.
 \begin{figure}
 	\includegraphics[width=0.5\textwidth]{fig6.pdf}
 	\caption{Invoked STAR's mapping step.} \label{fig6}
 \end{figure}
-And as Fig~\ref{fig6}, scSpark's align step's mapping speed not only have greater performance in same cores but also can get nearly linear imporve when cluster's CPU's cores improve.
-After align step, we grouped records by cell 
+After that as Fig~\ref{fig6} shown, although scSpark's align step based on STAR's code, mapping speed not only have greater performance in same cores but also can get nearly linear imporve when cluster's CPU's cores improve.
+Due to using in memory FASTQ RDD and SAM RDD to replace tradition pipeline's disk access, scSpark's align step can get great improve in same CPU cores condition.
+% 补充实验，STAR mapping speed会随着core上升而上升，但是有上限
+Furthermore, we also found STAR's mapping speed can get improve along with CPU's cores increase, but will converge after touching the threshold.
+And we took advantage of Spark's distributed trait, process multi STAR's program in the same time， and each STAR's can fully utilize multi-thread ability.
+After align step, we grouped records by cell and concurrency process each group in each CPU cores.
+This way also get great improve compare with tradition pipeline.
 \subsection{Scalability Evalution}
 \begin{figure}
 	\includegraphics[width=0.5\textwidth]{fig4.pdf}
@@ -715,106 +651,6 @@ And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleatio
 	\includegraphics[width=0.5\textwidth]{fig10.pdf}
 	\caption{tSNE plots based on scSpark and UMI-tools' gene expression matrices.} \label{fig10}
 \end{figure}
-% needed in second column of first page if using \IEEEpubid
-%\IEEEpubidadjcol
-
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
-
-% Note that the IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
-% However, the Computer Society has been known to put floats at the bottom.
-
-
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
-% labels, the optional argument to \subfloat must be present. If a
-% subcaption is not desired, just leave its contents blank,
-% e.g., \subfloat[].
-
-
-% An example of a floating table. Note that, for IEEE style tables, the
-% \caption command should come BEFORE the table and, given that table
-% captions serve much like titles, are usually capitalized except for words
-% such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
-% and up, which are usually not capitalized unless they are the first or
-% last word of the caption. Table text will default to \footnotesize as
-% the IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
-
-
-% Note that the IEEE does not put floats in the very first column
-% - or typically anywhere on the first page for that matter. Also,
-% in-text middle ("here") positioning is typically not used, but it
-% is allowed and encouraged for Computer Society conferences (but
-% not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
-% Note that, LaTeX2e, unlike IEEE journals/conferences, places
-% footnotes above bottom floats. This can be corrected via the
-% \fnbelowfloat command of the stfloats package.
-
-
-
 
 \section{Conclusion}
 In this paper, we proposed a way to utilize Apache Spark's in memory compute trait and achieved considerable speedup and scalability. 
@@ -979,10 +815,22 @@ X. Li, G. Tan, B. Wang, and N. Sun, “High-Performance Genomic Analysis Framewo
 A. Yang, M. Troup, P. Lin, and J. W. K. Ho, “Falco: a quick and flexible single-cell RNA-seq processing framework on the cloud.,” Bioinformatics, vol. 33, no. 5, pp. 767–769, Mar. 2017, doi: 10.1093/bioinformatics/btw732.
 
 \bibitem{ref_url4}
-“10xgenomics.” https://support.10xgenomics.com (accessed Nov. 30, 2020).
+“10xgenomics.human” https://support.10xgenomics.com (accessed Nov. 30, 2020).
 
 \bibitem{ref_url5}
-“Index and GTF file.” https://www.gencodegenes.org/human/rel eases.html (accessed Nov. 30, 2020).
+“Index and GTF file.” https://www.gencodegenes.org/human/releases.html (accessed Nov. 30, 2020).
+
+\bibitem{ref_url6}
+“UMI\_tools.” https://github.com/CGATOxford/UMI-tools (accessed Nov. 30, 2020).
+
+\bibitem{ref_url7}
+“10xgenomics.rat.” https://www.10xgenomics.com/resources/datasets/10-k-rat-pbm-cs-multiplexed-2-cm-os-3-1-standard-6-0-0 (accessed Jun. 22, 2021).
+
+\bibitem{ref_url8}
+“10xgenomics.monkey.” https://www.10xgenomics.com/resources/datasets/10-k-monkey-pbm-cs-multiplexed-2-cm-os-3-1-standard-6-0-0 (accessed Jun. 22, 2021).
+
+\bibitem{ref_url9}
+“FASTQ.Hadoop.API.” https://github.com/HadoopGenomics (accessed Jun. 22, 2021).
 
 \end{thebibliography}
 
