@@ -484,7 +484,7 @@ To compare with tradition pipelines, we tested three datasets in UMI-tools, Cell
 And then, we tested each step's spend time, due to CellRanger isn't an open source software and STARsolo implements pipeline in a different way, we choose UMI-tools as scSpark each step's performance baseline.
 After that, in align step, four pipelines all based on STAR's program.
 So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
-Except performance evaluate, we splited three datasets to different volume to prove scSpark's scalability better than tradition pipelines.
+Except performance evaluate, we use 16 CPU cores as tradition pipeline's scalability baseline and use 64 CPU cores as scSpark's scalability baseline to prove scSpark's scalability better than tradition pipelines.
 
 \section{Results}
 We evaluated the speed and scalabilty for each step of scSpark to show the advantage of scSpark compared with the available pipelines. 
@@ -566,47 +566,22 @@ This way also get great improve compare with tradition pipeline.
 	\caption{Pipeline Scalability.} \label{fig4}
 \end{figure}
 ScSpark's second advantage is that it could get near linear improvement when the cluster's CPU core number increased. 
-To test the scalability, we used 16 CPU cores performance as previous pipeline's baseline and 64 CPU cores performance as scSpark's baseline. 
 We used a small sample which had 100 millions records to compare speedup. 
-As shown in Fig~\ref{fig4}, we found that when CPU cores number increased, our program could get near linear speedup. 
-In addition, we found if the CPU cores number exceeds a ceiling, both previous pipeline and scSpark will speedup nearly stop. 
+As shown in Fig~\ref{fig}, we found that when CPU cores number increased, scSpark could get near linear speedup. 
+In addition, we found if the CPU cores number exceeds a ceiling, previous pipelines will speedup nearly stop. 
 Umi-tools did not show any scalabiliy and even a little slow down when the CPU cores number increased. 
 STARsolo and CellRanger shown a little improve when the CPU cores increased to 32 from 16, but quickly stopped speedup. 
-These results show that scSpark's scalability has great improvement. 
-\subsection{Comparsion each step performance's increase}
-\begin{figure}
-	\includegraphics[width=0.5\textwidth]{fig5.pdf}
-	\caption{Each step consumes time.} \label{fig5}
-\end{figure}
-We also recorded each step's process time to know the reason of the improvement.
-As shown in Fig~\ref{fig5}, we found our program's scalability mainly came from the alignment step, which consumed most time in the whole program.
-Next, we counted how much records scSpark's STAR program can process.
-We found that, as shown in Fig~\ref{fig6}, STAR's mapping speed was influenced by the data size and dataset with small size will lost its scalability earier than those with large size.
-\begin{figure}
-	\includegraphics[width=0.5\textwidth]{fig6.pdf}
-	\caption{Invoked STAR's mapping step.} \label{fig6}
-\end{figure}
+These results show that scSpark's scalability has great improvement and scalability can improve with the data volume. 
+ScSpark's scalability is much better than any previous pipeline.
+And through Fig~\ref{fig5}, we found it can improve with the data volume improve.
+As Fig~\ref{fig6} shown, align step occupies largest part of scSpark's process time, and scSpark's scalability much comes from this step.
+% 数据量下降，mapping speed下降
+We found STAR's mapping speed influenced by data volume, due to both scSpark and STAR need same load genome index ahead of map.
+This substep's fix process time influenced the whole align step's scalability.
+When the data volume increase, the time to process map substep will occupied large part of whole align step.
+So scSpark can get higher scalability when the data volume increase.
 
-\begin{table}
-	\centering
-	\caption{Processing speed w.r.t. data size}\label{tab3}
-	\resizebox{0.45\textwidth}{!}
-	{
-	\begin{tabular}{l | l | l | l | l}
-		\hline
-		Volume(million reads) & 10 & 50 & 100 & 640 \\
-		\hline
-		Speed(million reads per hour) & 250.28 & 503.83 & 503.02 & 950 \\
-		\hline
-	\end{tabular}
-	}
-\end{table}
-
-Then we tested STAR program, and found the mapping speed was also influenced by data size. 
-As Table~\ref{tab3} shown, the speed of STAR mapping increased when the size of data increase. 
-So when we got scalability by increasing partition, each partition's read number decreased and it would limit the scalability improvement
-
-\subsection{Performance Analysis}
+\subsection{Resource Analysis}
 We tested performance to find the bottleneck of scSpark.
 We used 640 millions records of FASTQ data to evaluate two aspects of scSpark.
 First we compared network shuffle and disk access spend by scSpark and compute proportions of time, which helped to find whether network shuffle or disk access occupies too much time.
@@ -662,46 +637,7 @@ Moreover,scSpark can improve scalability by increasing partition number if the r
 And we also found our scSpark's scalability improvement has a ceiling. 
 The reason is that our scSpark invokes STAR's mapping speed, which is influenced by loading index time. 
 And if data size is tiny, the influence occupies a large proportion of whole the STAR program process time. 
-% if have a single appendix:
-%\appendix[Proof of the Zonklar Equations]
-% or
-%\appendix  % for no appendix heading
-% do not use \section anymore after \appendix, only \section*
-% is possibly needed
 
-% use appendices with more than one appendix
-% then use \section to start each appendix
-% you must declare a \section before using any
-% \subsection or using \label (\appendices by itself
-% starts a section numbered zero.)
-%
-
-
-%\appendices
-%\section{Proof of the First Zonklar Equation}
-%Appendix one text goes here.
-
-% you can choose not to have a title for an appendix
-% if you want by leaving the argument blank
-%\section{}
-%Appendix two text goes here.
-
-
-% use section* for acknowledgment
-%\ifCLASSOPTIONcompsoc
-  % The Computer Society usually uses the plural form
-  %\section*{Acknowledgments}
-%\else
-  % regular IEEE prefers the singular form
-  %\section*{Acknowledgment}
-%\fi
-
-
-%The authors would like to thank...
-
-
-% Can use something like this to put references on a page
-% by themselves when using endfloat and the captionsoff option.
 \ifCLASSOPTIONcaptionsoff
   \newpage
 \fi
