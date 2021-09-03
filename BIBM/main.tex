@@ -107,7 +107,7 @@ In addition, UMI-tools~(\url{https://github.com/CGATOxford/UMI-tools}) is an ope
 Furthermore, STARsolo~\cite{Blibaum2019STARsolo} has improved the parallelism of sequence mapping and counting procedures, and achieved good performance on a single machine.
 Great improvement has been achieved recently for the development of scRNA-seq data processing tools. However, all the avaliable scRNA-seq data processing tools can only run on a single machine with limited running speed, and cannot be extended to multiple nodes.
 
-In recent years, there have been many studies focusing on the optimization of next generation sequencing (NGS) data processing using big data framework like Hadoop~(\url{https://hadoop.apache.org}) and Spark~(\url{https://hadoop.apache.org}). 
+In recent years, there have been many studies focusing on the optimization of next generation sequencing (NGS) data processing using big data framework like Hadoop~(\url{https://hadoop.apache.org}) and Spark~(\url{https://spark.apache.org}). 
 Due to higher efficiency in utilizing memory computing, Spark is a better big data computing framework than Hadoop's MapReduce~\cite{Dean2008MapReduce, Zaharia2012Resilient}. 
 SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spart for improving the efficiency of NGS data processing. 
 Falco~\cite{Yang2017Falco} has tried to use Spark in scRNA-seq data preprocessing, but it has two limitations. 
@@ -142,7 +142,9 @@ ScSpark splits FASTQ R1's sequence to two part, use barcode as RDD's key and use
 	\includegraphics[width=0.45\textwidth]{Fig1.pdf}
 	\caption{An overview of sequence quality control module based on Spark.} \label{fig1}
 \end{figure}
-As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components, i)generating a whitelist including identities of the true cell barcodes is unknown and ii)filtering FASTQ R1 with the whitelist and extracting FASTQ R2 according to filtered FASTQ R1's index.
+As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components.
+First, generating a whitelist including identities of the true cell barcodes is unknown.
+Second, filtering FASTQ R1 with the whitelist and extracting FASTQ R2 according to filtered FASTQ R1's index.
 After FASTQ R1 RDD generated, we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate results. 
 By using reduceByKey function, each barcode could be counted parallelly in each split of FASTQ R1 RDD and we could merge each split's result in the end. 
 After that we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster. 
@@ -187,15 +189,23 @@ Dataset1, 10X Genomics v3 10k peripheral blood mononuclear cell (PBMC) from a he
 Dataset2, 10X Genomics 10k Rat PBMCs Multiplexed from a  Wistar rat strain~(\url{www.10xgenomics.com/resources/datasets/10-k-rat-pbm-cs-multiplexed-2-cm-os-3-1-standard-6-0-0}), which contain 289.3 millions records.
 Dataset3, 10X Genomics 10k Monkey PBMCs Multiplexed from a Rhesus monkey strain~(\url{www.10xgenomics.com/resources/datasets/10-k-monkey-pbm-cs-multiplexed-2-cm-os-3-1-standard-6-0-0}), which contain 261.5 millions records.
 To compare with tradition pipelines, we tested three datasets in UMI-tools, CellRanger, STARsolo and scSpark's performance.
-And then, we tested each step's spend time, due to CellRanger isn't an open source software.
+Limited by single machine's CPU cores, we only take 64 CPU cores in traditional pipeline test as the traditional pipeline's performance.
+And then, we tested each step's process spend time, due to CellRanger isn't an open source software.
 And STARsolo implemented pipeline in a different way, we choose UMI-tools as scSpark each step's performance baseline.
-After that, in align step, four pipelines all based on STAR's program.
+After that, in align step, four pipelines' align step all based on STAR's program.
 So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
 Except performance evaluate, we use 16 CPU cores as tradition pipeline's scalability baseline and use 64 CPU cores as scSpark's scalability baseline to prove scSpark's scalability better than tradition pipelines.
+ScSpark is developed based on UMI-tools. 
+And UMI-tools accuracy was fully verified. 
+This section we used the gene expression matrix that was obtained by scSpark and UMI-tools under the same dataset to perform downstrema analysis of scRNA-seq data. 
+And then we compared two tools transcript analysis's result and cell cluster analysis's result to verify the correlation between scSpark and UMI-tools. 
+Under hgmm-1k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation.
 
 \section{Results}
-We evaluated the speed, scalabilty and compare each step's scalability of scSpark in this section. 
-
+First, we compared each pipeline's speed.
+And then we compared each step's speed of scSpark with UMI\_tools.
+After that, we contrasted STAR's mapping speed in different CPU cores.
+We also discussed each pipeline's scalability in this section.
 \subsection{Efficiency evaluation}
 \begin{table}
 	\centering
@@ -226,9 +236,8 @@ We evaluated the speed, scalabilty and compare each step's scalability of scSpar
 	\end{tabular}
 	}
 \end{table}
-Limited by single machine's CPU cores, we only take 64 cores in traditional pipeline test as the traditional pipeline's performance.
-Table~\ref{tab1} gives a summary of our program's performance and compare with tradition pipeline's performance.
-We can see scSpark's speed is much more quick than any tradition pipeline in same CPU cores environment.
+Table~\ref{tab1} gives a summary of scSpark's performance and compare with tradition pipeline's performance.
+We can see scSpark's speed is much quicker than any tradition pipelines in same CPU cores environment.
 And scSpark can get improve when the cluster's CPU cores number increase.
 \begin{table}
 	\centering
@@ -236,7 +245,7 @@ And scSpark can get improve when the cluster's CPU cores number increase.
 	\resizebox{0.45\textwidth}{!} {
 	\begin{tabular}{l | l | l | l | l | l}
 		\hline
-		System & Dataset & Cores & Barcode and UMI correct, filter & align & count \\
+		System & Dataset & Cores & Barcode and UMI correct, quality control & align & count \\
 		\hline
 		UMI-tools(100 million reads) & 1 & 64 cores & 9720 & 600 & 1740 \\
 		UMI-tools(640 million reads) & 1 & 64 cores & 33600 & 2160 & 8400 \\
@@ -253,155 +262,95 @@ And scSpark can get improve when the cluster's CPU cores number increase.
 		\hline
 	\end{tabular} }
 \end{table}
-We recorded each step's process time to know the reason of the speed's improvement.
+
+We recorded each step's process time to find the reason of scSpark's speed improvement.
 As table~\ref{tab2} shown, scSpark is much faster than the UMI-tools in any single step.
-Contrast with UMI-tools, We could see scSpark gets great improve in the first two steps, barcode correct and filter.
+
+Contrast with UMI-tools, scSpark gets great improve in the first two steps, barcode correct and quality control.
 This step's improve comes from using in memory trait to reduce disk access times and take advantage of Spark's high concurrency feature.
+% scSpark's mapping speed increase with CPU cores number picture(need add in 2021.9.5)
 
-\subsection{Scalability Evalution}
-\begin{figure}
-  \includegraphics[width=0.5\textwidth]{fig4.pdf}
-  \caption{An overview of Spark version filter.} \label{fig4}
-\end{figure}
-ScSpark's second advantage is that it can get near linear improvement when the cluster's CPU core number improve. 
-To test the scalability of the tradition pipeline and scSpark, we use 16 CPU cores performance as tradition pipeline's baseline and 64 CPU cores performance as scSpark's baseline. 
-We use a small sample which have 100 millions records to compare speedup between our program and tradition pipeline. 
-As shown in Fig~\ref{fig5}, We found when CPU cores number increase our program can get near linear speedup and tradition pipeline's speedup far below linear speedup. 
-And we also found if the CPU cores number exceeds a ceiling, both tradition pipeline and scSpark will speedup nearly stop. 
-UMI-tools isn't showing any scalabiliy, even a little slow down when the CPU cores number increase. 
-STARsolo and CellRanger shows a little improve when the CPU cores increases to 32 from 16, but quickly stop speedup. 
-But scSpark ceiling is much higher than tradition pipeline. 
-All of it explain that our program more scalability than all tradition pipeline. 
+After that, due to using in memory FASTQ RDD and SAM RDD to replace tradition pipeline's disk access, scSpark's align step can get great improve in same CPU cores condition.
+% STAR's mapping speed picture
+Furthermore, we also found STAR's mapping speed can get improve along with CPU's cores increase, but will converge after touching the threshold.
+Although scSpark's align step based on STAR's program, scSpark's mapping speed not only have greater performance in same CPU cores but also can get nearly linear imporve when cluster's CPU's cores number improve.
+But scSpark takes advantage of Spark's distributed trait, processes multi STAR's program in same time, and each STAR's can fully utilize multi thread ability.
 
-\subsection{Comparsion each step performance's increase}
-\begin{figure}
-  \includegraphics[width=0.5\textwidth]{fig5.pdf}
-  \caption{Each step consumes time.} \label{fig5}
-\end{figure}
-We also record each step's process time to know the reason of our improve and where can improve in future.
-As shown in Fig~\ref{fig5}, we found our program's scalability most come from the align step and the align consumes most time in the whole program.
-To find the reason why the align step is more scalability than the other step and why the scalability have a ceiling, we count how much records scSpark's STAR program can process.
-We can find in Fig~\ref{fig6}, STAR's mapping speed is influenced by the data volume size and small volume dataset will lost its scalability earier than large volume dataset.
-\begin{figure}
-  \includegraphics[width=0.5\textwidth]{fig6.pdf}
-  \caption{Invoked STAR's mapping step.} \label{fig6}
-\end{figure}
+After align step, we grouped records by cell and concurrency processed each group in each CPU cores.
+This way also gets great improve compare with tradition pipeline.
 
+\subsection{scalability evaluation}
+Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also can get improve when CPU cores number increase.
+% CPU数增加对传统流程性能影响小
+As shown in Fig 6, we found tradition pipelines can get improve when CPU cores number increase but will converge quickly.
+And we found scSpark's scalability is much better than tradition pipeline.
+Moreover we found scSpark's scalability will increase with data volume.
+% scSpark不同核心数不同步骤的表现
+As shown in Fig 7, scSpark's scalability major came from align step and align step consumes major time of scSpark.
+To find the reason why the align step's scalability influenced by data volume, we tested STAR's mapping speed in different data volume.
 \begin{table}
-    \centering
-    \caption{Processing speed w.r.t. data volume}\label{tab3}
-    \begin{tabular}{|l | l | l | l | l|}
-    \hline
-    Volume (million reads) & 10 & 50 & 100 & 640 \\
-    \hline
-    Speed (million reads per hour) & 250.28 & 503.83 & 503.02 & 950 \\
-    \hline
-    \end{tabular}
-  \end{table}
+  \centering
+  \caption{Processing speed w.r.t. data volume}\label{tab3}
+	\begin{tabular}{|l | l | l | l | l|}
+	\hline
+	Volume (million reads) & 10 & 50 & 100 & 640 \\
+	\hline
+	Speed (million reads per hour) & 250.28 & 503.83 & 503.02 & 950 \\
+	\hline
+  \end{tabular}
+\end{table}
+As Table~\ref{tab3} shown, STAR mapping speed will increase when the data volume increase. 
+ScSpark align step is based on STAR, when cluster's CPU cores increase, each node's STAR program's data volume decrease.
+So in align step, scSpark's scalability decreases when each node's data volume less than a threshold.
+
+\subsection{Performance Analysis}
+We tested performance to find bottleneck of our scSpark.
+We used 640 millions records of FASTQ data to evaluate two aspect of our scSpark.
+First we compared scSpark spend in network shuffle, disk access and compute time proportion to find whether network shuffle or disk access occupies too much time.
+Second we tested CPU and memory usage, to ensure which resources will be scSpark's bottleneck.
   
-  Then we test STAR program, and find the mapping speed is influenced by data volume. 
-  As Table~\ref{tab3} shown, STAR mapping speed will increase when the data volume increase. 
-  So when we get scalability by increase partition, each partition's read number decrease will limit the scalability increase. 
+\subsubsection{Network and disk behavior}
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{fig7.pdf}
+  \caption{Each step consumes time.} \label{fig7}
+\end{figure}
+We computed network time by summing up the time that our scSpark shuffle data in multi machine. 
+Disk access comes from loading FASTQ, STAR's index and GTF files. 
+The ideal situation is tasks did not waste any time in disk access and network shuffle. 
+We found that scSpark's computing time occupies most execute time. 
+Except STAR's index file, all file's disk access distribute to each node that improve whole system's loading speed. 
+And we found the time that waste in shuffling doesn't occypy too much time. 
   
-  \subsection{Performance Analysis}
-  We tested performance to find bottleneck of our scSpark.
-  We used 640 millions records of FASTQ data to evaluate two aspect of our scSpark.
-  First we compared scSpark spend in network shuffle, disk access and compute time proportion to find whether network shuffle or disk access occupies too much time.
-  Second we tested CPU and memory usage, to ensure which resources will be scSpark's bottleneck.
+\subsubsection{CPU and memory usage}
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{fig8.pdf}
+  \caption{CPU and Memory usage of scSpark.} \label{fig8}
+\end{figure}
+We monitored scSpark's CPU and memory usage during processing. 
+As Fig~\ref{fig8} shown, in sequence quality control step, scSpark highly exploited each node's multi cores CPU to achieve speedup. 
+Convenition pipelines single thread solution's CPU usage is much lower than scSpark. 
+And we found that scSpark's boundary much comes from genome alignment.
+Because we invoked STAR as our alignment tool, and STAR's program naturally occupy most proportion of memory in this step.
   
-  \subsubsection{Network and disk behavior}
-  \begin{figure}
-    \includegraphics[width=0.5\textwidth]{fig7.pdf}
-    \caption{Each step consumes time.} \label{fig7}
-  \end{figure}
-  We computed network time by summing up the time that our scSpark shuffle data in multi machine. 
-  Disk access comes from loading FASTQ, STAR's index and GTF files. 
-  The ideal situation is tasks did not waste any time in disk access and network shuffle. 
-  We found that scSpark's computing time occupies most execute time. 
-  Except STAR's index file, all file's disk access distribute to each node that improve whole system's loading speed. 
-  And we found the time that waste in shuffling doesn't occypy too much time. 
-  
-  \subsubsection{CPU and memory usage}
-  \begin{figure}
-    \includegraphics[width=0.5\textwidth]{fig8.pdf}
-    \caption{CPU and Memory usage of scSpark.} \label{fig8}
-  \end{figure}
-  We monitored scSpark's CPU and memory usage during processing. 
-  As Fig~\ref{fig8} shown, in sequence quality control step, scSpark highly exploited each node's multi cores CPU to achieve speedup. 
-  Convenition pipelines single thread solution's CPU usage is much lower than scSpark. 
-  And we found that scSpark's boundary much comes from genome alignment.
-  Because we invoked STAR as our alignment tool, and STAR's program naturally occupy most proportion of memory in this step.
-  
-  \subsubsection{Biological verification}
-  Our scSpark is developed based on UMI-tools. 
-  And UMI-tools accuracy was fully verified. 
-  This section we uses the gene expression matrix obtained by scSpark and UMI-tools under the same dataset to perform downstrema analysis of scRNA-seq data. 
-  And then we compared two tools transcript analysis's result and cell cluster analysis's result to verify the correlation between scSpark and UMI-tools. 
-  Under hgmm-1k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation. 
-  As Fig~\ref{fig9} shown, for each after processing cell barcode, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998. 
-  \begin{figure}
-    \includegraphics[width=0.5\textwidth]{fig9.pdf}
-    \caption{correlation of scSpark and UMI-tools.} \label{fig9}
-  \end{figure}
-  Furthermore, we used Seurat to print tSNE picture which based on gene expression matrix generated by ScSpark and UMI-tools. 
-  And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleation between ScSpark and UMI-tools. 
-  \begin{figure*}
-    \includegraphics[width=\textwidth]{fig10.pdf}
-    \caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig10}
-  \end{figure*}
-  \section{Conclusion}
-  In this paper, we proposed a way which utilize Apache Spark's in memory compute trait and get considerable speedup and scalability. 
-  Our scSpark can take advantage of multi machine compute capacity to speedup all step and eliminate redundant disk access. 
-  
-  Except performance improve, our scSpark also show much more scalability than any tradition pipeline which closes to linear improve.
-  Our scSpark not only can improve each partition process STAR program's mapping speed, but also can improve scalability by increasing partition number if the resource is sufficient.
-  
-  And we also found our scSpark's scalability improve has a ceiling. 
-  The reason is that our scSpark invokes STAR's mapping speed influenced by loading index time. 
-  And if data volume is tiny, the influence occupies a large proportion of whole the STAR program process time. 
+\subsubsection{Biological verification} 
+As Fig~\ref{fig9} shown, for each after processing cell barcode, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998. 
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{fig9.pdf}
+  \caption{correlation of scSpark and UMI-tools.} \label{fig9}
+\end{figure}
+Furthermore, we used Seurat to print tSNE picture which based on gene expression matrix generated by ScSpark and UMI-tools. 
+And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleation between ScSpark and UMI-tools. 
+\begin{figure*}
+  \includegraphics[width=\textwidth]{fig10.pdf}
+  \caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig10}
+\end{figure*}
 
-% \section*{Acknowledgment}
+\section{Conclusion}
+In this paper, we proposed a way which utilize Apache Spark's in memory compute and distributed compute trait to strengthen upstream scRNA-seq pipeline.
+We developed scSpark, which can get considerable speedup and scalability compared with tradition pipelines.
 
-% The preferred spelling of the word ``acknowledgment'' in America is without 
-% an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B. 
-% G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
-% acknowledgments in the unnumbered footnote on the first page.
-
-% \section*{References}
-
-% Please number citations consecutively within brackets \cite{b1}. The 
-% sentence punctuation follows the bracket \cite{b2}. Refer simply to the reference 
-% number, as in \cite{b3}---do not use ``Ref. \cite{b3}'' or ``reference \cite{b3}'' except at 
-% the beginning of a sentence: ``Reference \cite{b3} was the first $\ldots$''
-
-% Number footnotes separately in superscripts. Place the actual footnote at 
-% the bottom of the column in which it was cited. Do not put footnotes in the 
-% abstract or reference list. Use letters for table footnotes.
-
-% Unless there are six authors or more give all authors' names; do not use 
-% ``et al.''. Papers that have not been published, even if they have been 
-% submitted for publication, should be cited as ``unpublished'' \cite{b4}. Papers 
-% that have been accepted for publication should be cited as ``in press'' \cite{b5}. 
-% Capitalize only the first word in a paper title, except for proper nouns and 
-% element symbols.
-
-% For papers published in translation journals, please give the English 
-% citation first, followed by the original foreign-language citation \cite{b6}.
-
+Refer to UMI-tools, scSpark divided the upstream process into four steps, UMI and CB correct, sequence quality control, genome alignment and transcript counting. 
 \bibliographystyle{IEEEtran}
 \bibliography{reference}
-
-% \begin{thebibliography}{00}
-% \bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
-% \bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
-% \bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-% \bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-% \bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-% \bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
-% \bibitem{b7} M. Young, The Technical Writer's Handbook. Mill Valley, CA: University Science, 1989.
-% \end{thebibliography}
-% \vspace{12pt}
-% \color{red}
-% IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
 
 \end{document}
