@@ -161,7 +161,7 @@ The last step in sequence quality control was using join function again to combi
 % Apart from Cellranger we can't know how it implements because it isn't an open source software. 
 In previous pipeline, STAR needs to load extracted FASTQ R2 file and FASTQ R1 file.
 This way will generate unneccessary disk access. 
-We choose STAR as our aligner and modify STAR's load FASTQ way to avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
+We chose STAR as our aligner and modified STAR's loading FASTQ way to avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
 As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process.
 The STAR aligner was encapsulated as a shared object and invoked the shared object as our aligner. 
 To overcome imbalance problem of each node's data volume, we repartitioned the extracted FASTQ R2 RDD before transfer FASTQ RDD to STAR.
@@ -273,6 +273,20 @@ This step's improve comes from using in memory trait to reduce disk access times
 
 After that, due to using in memory FASTQ RDD and SAM RDD to replace tradition pipeline's disk access, scSpark's align step can get great improve in same CPU cores condition.
 % STAR's mapping speed picture
+\begin{table}
+	\centering
+	\caption{STAR's mapping speed}\label{tab3}
+	\resizebox{0.45\textwidth}{!} {
+	\begin{tabular}{l | l | l | l | l | l | l}
+		\hline
+		 & 2 cores & 4 cores & 8 cores & 16 cores & 32 cores & 64 cores \\
+		\hline
+		Dataset1 & 120.97 & 242.08 & 449.09 & 772.13 & 1389.32 & 961.59 \\
+		Dataset2 &  & 261.23 & 530.57 & 1089 & 1391.24 & 1347.35 \\
+		Dataset3 & 38.7 & 76.38 & 170.01 & 325.85 & 512.59 & 828.99 \\
+		\hline
+	\end{tabular} }
+\end{table}
 Furthermore, we also found STAR's mapping speed can get improve along with CPU's cores increase, but will converge after touching the threshold.
 Although scSpark's align step based on STAR's program, scSpark's mapping speed not only have greater performance in same CPU cores but also can get nearly linear imporve when cluster's CPU's cores number improve.
 But scSpark takes advantage of Spark's distributed trait, processes multi STAR's program in same time, and each STAR's can fully utilize multi thread ability.
@@ -350,7 +364,9 @@ And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleatio
 In this paper, we proposed a way which utilize Apache Spark's in memory compute and distributed compute trait to strengthen upstream scRNA-seq pipeline.
 We developed scSpark, which can get considerable speedup and scalability compared with tradition pipelines.
 
-Refer to UMI-tools, scSpark divided the upstream process into four steps, UMI and CB correct, sequence quality control, genome alignment and transcript counting. 
+Refer to UMI-tools, scSpark divided the upstream process into four steps, UMI and CB correct, sequence quality control, genome alignment and transcript counting.
+And we found scSpark's each steps can get higher performance than UMI-tools.
+
 \bibliographystyle{IEEEtran}
 \bibliography{reference}
 
