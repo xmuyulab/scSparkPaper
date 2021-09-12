@@ -223,17 +223,17 @@ In the end, we verified scSpark's result by comparing with UMI\_tools's result.
 		\hline
 		Pipeline & Dataset & Cores & Spend time(s) \\
 		\hline
-		UMI-tools & pbmc\_human & 64 cores & 7254 \\
+		UMI-tools & pbmc\_human & 64 cores & 7284 \\
 		CellRanger & pbmc\_human & 64 cores & 2225 \\
-		STAR-solo & pbmc\_human & 64 cores &  5820 \\
+		STAR-solo & pbmc\_human & 64 cores &  1987 \\
 		scSpark & pbmc\_human & 4*16 cores & 355 \\
-		UMI-tools & pbmc\_rat & 64 cores & 7254 \\
-		CellRanger & pbmc\_rat & 64 cores & 6000 \\
-		STAR-solo & pbmc\_rat & 64 cores &  5820 \\
+		UMI-tools & pbmc\_rat & 64 cores & 7259 \\
+		CellRanger & pbmc\_rat & 64 cores & 1999 \\
+		STAR-solo & pbmc\_rat & 64 cores &  1854 \\
 		scSpark & pbmc\_rat & 4*16 cores & 326 \\
-		UMI-tools & pbmc\_monkey & 64 cores & 7254 \\
-		CellRanger & pbmc\_monkey & 64 cores & 6000 \\
-		STAR-solo & pbmc\_monkey & 64 cores &  5820 \\
+		UMI-tools & pbmc\_monkey & 64 cores & 7809 \\
+		CellRanger & pbmc\_monkey & 64 cores & 1891 \\
+		STAR-solo & pbmc\_monkey & 64 cores &  2357 \\
 		scSpark & pbmc\_monkey & 4*16 cores & 391 \\
 		\hline
 	\end{tabular}
@@ -241,6 +241,7 @@ In the end, we verified scSpark's result by comparing with UMI\_tools's result.
 \end{table}
 Table~\ref{tab1} gives a summary of scSpark's performance and compares with tradition pipeline's performance.
 We can see scSpark's speed is much quicker than any tradition pipelines in same CPU cores environment in three datasets.
+
 \begin{table}
 	\centering
 	\caption{Performance comparision for each step}\label{tab2}
@@ -259,7 +260,7 @@ We can see scSpark's speed is much quicker than any tradition pipelines in same 
 	\end{tabular} }
 \end{table}
 
-We recorded each step's process time to find the reason of scSpark's speed improvement.
+After that we recorded each step's process time to find the reason of scSpark's speed improvement.
 As table~\ref{tab2} shown, scSpark is much faster than the UMI-tools in any single step.
 
 Contrast with UMI-tools, scSpark gets great improve in first two steps, cell barcode and UMI correct and quality control.
@@ -275,10 +276,12 @@ Due to each cell's record number imbalance, scSpark's count step has a little da
 This way also gets great improve compare with UMI-tools.
 
 \subsection{scalability evaluation} 
-Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also can get improve when CPU cores number increase.
+Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can get improve when CPU cores number increase.
 % CPU数增加对传统流程性能影响小
-As shown in Fig 6, we found tradition pipelines can get improve when CPU cores number increase but will converge quickly.
-And we found scSpark's scalability is much better than tradition pipeline.
+
+As shown in Fig 6, we found three tradition pipelines can get improve when CPU cores number increase.
+But this speed improve will converge quickly.
+We used tradition pipelines' speedup rate divided CPU cores number increase rate as baseline to examify scSpark's scalability.
 Moreover we found scSpark's scalability will increase with data volume.
 % scSpark不同核心数不同步骤的表现
 \begin{table}
@@ -315,35 +318,6 @@ As Table~\ref{tab3} shown, STAR mapping speed will increase when the data volume
 ScSpark align step is based on STAR, when cluster's CPU cores increase, each node's STAR program's data volume decrease.
 So in align step, scSpark's scalability decreases when each node's data volume less than a threshold.
 
-\subsection{Performance Analysis}
-We tested performance to find bottleneck of our scSpark.
-We used 640 millions records of FASTQ data to evaluate two aspect of our scSpark.
-First we compared scSpark spend in network shuffle, disk access and compute time proportion to find whether network shuffle or disk access occupies too much time.
-Second we tested CPU and memory usage, to ensure which resources will be scSpark's bottleneck.
-  
-\subsubsection{Network and disk behavior}
-\begin{figure}
-  \includegraphics[width=0.5\textwidth]{fig7.pdf}
-  \caption{Each step consumes time.} \label{fig7}
-\end{figure}
-We computed network time by summing up the time that our scSpark shuffle data in multi machine. 
-Disk access comes from loading FASTQ, STAR's index and GTF files. 
-The ideal situation is tasks did not waste any time in disk access and network shuffle. 
-We found that scSpark's computing time occupies most execute time. 
-Except STAR's index file, all file's disk access distribute to each node that improve whole system's loading speed. 
-And we found the time that waste in shuffling doesn't occypy too much time. 
-  
-\subsubsection{CPU and memory usage}
-\begin{figure}
-  \includegraphics[width=0.5\textwidth]{fig8.pdf}
-  \caption{CPU and Memory usage of scSpark.} \label{fig8}
-\end{figure}
-We monitored scSpark's CPU and memory usage during processing. 
-As Fig~\ref{fig8} shown, in sequence quality control step, scSpark highly exploited each node's multi cores CPU to achieve speedup. 
-Convenition pipelines single thread solution's CPU usage is much lower than scSpark. 
-And we found that scSpark's boundary much comes from genome alignment.
-Because we invoked STAR as our alignment tool, and STAR's program naturally occupy most proportion of memory in this step.
-  
 \subsubsection{Biological verification} 
 As Fig~\ref{fig9} shown, for each after processing cell barcode, their gene expression matrix approximate fit $y=x$, $R^{2}$ closed to 0.9998. 
 \begin{figure}
