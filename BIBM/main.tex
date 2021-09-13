@@ -106,7 +106,8 @@ STARsolo is a recently developed extended pipeline based on the original genome 
 However, these scRNA-seq data processing tools only run on a single machine and thus posing a high demand on hardware configurations, e.g., the number of CPU cores and the memory size. 
 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
-SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spark for improving the efficiency of NGS data processing.
+SparkBWA~\cite{Abun2016SparkBWA} is a pipeline based on Spark which can speed up the alignment.
+And GPF~\cite{Li2018Highperformance} is a fast in-memory computing framework with Spark for large-scale genomic data processing.
 Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
 Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
 Secondly, the performance gain of Falco basically lies in distributed compute.
@@ -164,7 +165,7 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 \section{Method}
 \subsection{Overview}
 ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
-ScSpark run program across Spark's cluster and default cache data in memory. 
+ScSpark run program across Spark's cluster and default cache data in in-memory. 
 We implemented cell barcode and UMI correct when Spark's cluster load data and abstract them to RDD.
 And we developed a high concurrency Spark version sequence quality control. 
 After that, scSpark processed STAR's program on each node in the cluster.
@@ -205,7 +206,7 @@ As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extrac
 The STAR aligner was encapsulated as a shared object and invoked the shared object as our aligner. 
 To overcome imbalance problem of each node's data volume, we repartitioned the extracted FASTQ R2 RDD before transfer FASTQ RDD to STAR.
 Each node could run STAR parallelly with counterpoise data volume. 
-We also found if node's in memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing.
+We also found if node's in-memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing.
 After align, STAR's output is SAM file or BAM file that will generate more disk access waste than STAR's input.
 Here, We used Java Native Interface again to transfer STAR results and directly abstract them as SAM RDD. 
 
@@ -288,10 +289,10 @@ After that we recorded each step's process time to find the reason of scSpark's 
 As table~\ref{fig4} shown, scSpark is much faster than the UMI-tools in any single step.
 
 Contrast with UMI-tools, scSpark gets great improve in first two steps, cell barcode and UMI correct and quality control.
-This step's improve comes from scSpark's in memory trait which can reduce disk access times.
+This step's improve comes from scSpark's in-memory trait which can reduce disk access times.
 And scSpark can take advantage of Spark's high concurrency feature when UMI-tools processed record with single thread.
 
-After that, scSpark use in memory FASTQ RDD and SAM RDD to replace tradition pipeline's disk access. 
+After that, scSpark use in-memory FASTQ RDD and SAM RDD to replace tradition pipeline's disk access. 
 Although scSpark and UMI-tools's align step both based on STAR, scSpark can get great improve in same CPU cores condition.
 Except reduce redundancy disk access, scSpark processes multi STAR program across Spark cluster in the same time also can improve scSpark's mapping speed.
 
@@ -362,7 +363,7 @@ And as Fig~\ref{fig10} shown, tSNE cell clustering result showed high corrleatio
 \end{figure*}
 
 \section{Conclusion}
-In this paper, we proposed a way which utilize Apache Spark's in memory compute and distributed compute trait to strengthen upstream scRNA-seq pipeline.
+In this paper, we proposed a way which utilize Apache Spark's in-memory compute and distributed compute trait to strengthen upstream scRNA-seq pipeline.
 We developed scSpark, which processes more efficiency and more scalable than tradition pipelines.
 
 Refer to UMI-tools, scSpark divided the upstream process into four steps, UMI and CB correct, sequence quality control, genome alignment and transcript counting.
