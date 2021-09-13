@@ -106,11 +106,11 @@ STARsolo is a recently developed extended pipeline based on the original genome 
 However, these scRNA-seq data processing tools only run on a single machine and thus posing a high demand on hardware configurations, e.g., the number of CPU cores and the memory size. 
 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
-SparkBWA~\cite{Abun2016SparkBWA} xxx.
-GPF~\cite{Li2018Highperformance} xxx. 
+SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spark for improving the efficiency of NGS data processing.
 Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
 Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
-Secondly, the performance gain of Falco basically lies in xxx. It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
+Secondly, the performance gain of Falco basically lies in distributed compute.
+It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
 
 We present scSpark, a scRNA-seq data processing pipeline using the Spark framework, for high performance data processing on a cluster of computers. 
 To meet the demand of computing and storage resources for super-large scale scRNA-seq data, 
@@ -301,20 +301,25 @@ This way also gets great improve compare with UMI-tools.
 
 \subsection{scalability evaluation} 
 Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala out to improve process speed.
-\begin{figure*}
-	\includegraphics[width=\textwidth]{Fig5.pdf}
-	\caption{An overview of tradition pipelines and scSpark's speedup.} \label{fig5}
-\end{figure*}
+\begin{figure}
+	\includegraphics[width=0.45\textwidth]{Fig5.pdf}
+	\caption{An overview of tradition pipelines' speedup.} \label{fig5}
+\end{figure}
 Due to the limited of single machine CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
 And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 128 (8*16) CPU cores to 256 (16*16) CPU cores.
-As shown in ~\ref{fig5}, we found that UMI\-tools' speedup is poor when CPU cores number increase.
+As shown in Fig~\ref{fig5}, we found that UMI\-tools' speedup is poor when CPU cores number increase.
 Except align step, UMI-tools processes on single thread which causes it can't take advantage of CPU cores number increase.
 So UMI\-tools' scalability is weak.
 STAR-solo and Cellranger shows poorer scalability when CPU cores number increase.
 When CPU cores number increased from 16 to 32, STAR-solo achieved approximate average 40\% speedup and Cellranger achieved approximate ?\% speedup.
 When CPU cores number increased from 32 to 64, STAR-solo's speedup was average 20\% and Cellranger speedup was average ?\%.
 Both pipelines speedup rate will decrease when CPU cores increase.
-As for scSpark, we found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+
+\begin{figure}
+	\includegraphics[width=0.45\textwidth]{fig7.pdf}
+	\caption{scSpark's speedup.} \label{fig6}
+\end{figure}
+As shown in Fig~\ref{fig6}, we found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
 
 Due to UMI\-tools' processes on single thread except align step, this pipelines' scalability most come from align step.
@@ -336,10 +341,10 @@ Due to UMI\-tools' processes on single thread except align step, this pipelines'
 As shown in Table~\ref{tab3}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
 STAR's speedup rate not only decrease when CPU cores number increase but also have a bottleneck when CPU cores number increase from 32 to 64.
 \begin{figure}
-	\includegraphics[width=0.5\textwidth]{fig6.pdf}
-	\caption{scSpark's mapping speed.} \label{fig6}
+	\includegraphics[width=0.45\textwidth]{fig6.pdf}
+	\caption{scSpark's mapping speedup.} \label{fig7}
 \end{figure}
-As Fig~\ref{fig6} shown, we found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
+As Fig~\ref{fig7} shown, we found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
 ScSpark enable distributed process align step per node across Spark cluster, so it can get nearly linear parallel efficiency.
 So scSpark's align step is more scalability than tradition pipelines' aligner. 
 
