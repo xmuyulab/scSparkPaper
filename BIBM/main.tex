@@ -245,10 +245,8 @@ And then we compared two tools transcript analysis's result and cell cluster ana
 Under hgmm-10k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation.
 
 \section{Results}
-First, we compared each pipeline's speed in same CPU cores number.
-Due to scSpark refers UMI\_tools, then we compared each step's speed of scSpark with UMI\_tools.
-After that, we contrasted each pipleline's scalability, and contrasted each step's scalability with UMI\_tools.
-In the end, we verified scSpark's result by comparing with UMI\_tools's result.
+%First, we compared each pipeline's speed in same CPU cores number.Due to scSpark refers UMI\_tools, then we compared each step's speed of scSpark with UMI\_tools.After that, we contrasted each pipleline's scalability, and contrasted each step's scalability with UMI\_tools.In the end, we verified scSpark's result by comparing with UMI\_tools's result.
+
 \subsection{Efficiency evaluation}
 
 \begin{table}
@@ -263,10 +261,12 @@ In the end, we verified scSpark's result by comparing with UMI\_tools's result.
 		CellRanger & pbmc\_human & 64 cores & 2225 \\
 		STAR-solo & pbmc\_human & 64 cores &  1987 \\
 		scSpark & pbmc\_human & 4*16 cores & 355 \\
+		\hline
 		UMI-tools & pbmc\_rat & 64 cores & 7259 \\
 		CellRanger & pbmc\_rat & 64 cores & 1999 \\
 		STAR-solo & pbmc\_rat & 64 cores &  1854 \\
 		scSpark & pbmc\_rat & 4*16 cores & 326 \\
+		\hline
 		UMI-tools & pbmc\_monkey & 64 cores & 7809 \\
 		CellRanger & pbmc\_monkey & 64 cores & 1891 \\
 		STAR-solo & pbmc\_monkey & 64 cores &  2357 \\
@@ -275,8 +275,9 @@ In the end, we verified scSpark's result by comparing with UMI\_tools's result.
 	\end{tabular}
 	}
 \end{table}
-Table~\ref{tab1} gives a summary of scSpark's performance and compares with tradition pipeline's performance.
-We can see scSpark's speed is much quicker than any tradition pipelines in same CPU cores environment in three datasets.
+We first evaluated the total time comsumption for different pipelines processing the same dataset with the same numbers of CPUs. It is noticeable that scSpark shows substantially higher running speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). To illustrate the main source of the significant improvement brought by scSpark, we also compared the efficiency of three individual steps of the pipeline between scSpark and UMI-tools. 
+%Table~\ref{tab1} gives a summary of scSpark's performance and compares with tradition pipeline's performance.
+%We can see scSpark's speed is much quicker than any tradition pipelines in same CPU cores environment in three datasets.
 
 \begin{figure*}
 	\includegraphics[width=\textwidth]{Fig4.pdf}
