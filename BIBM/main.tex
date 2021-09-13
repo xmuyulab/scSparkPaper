@@ -102,14 +102,14 @@ Finally, the reads are assigned to genes and the count matrices for UMIs are gen
 Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
 CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
 UMI-tools is a comprehensive scRNA-seq data processing suite with the directional barcode collapse algorithm integrated that cosiderably promotes the transcript quantification accuracy.
-STARsolo is a recently developed  extended pipeline based on the original genome aligner STAR to adapt the single-cell applications. 
+STARsolo is a recently developed extended pipeline based on the original genome aligner STAR to adapt the single-cell applications. 
 However, these scRNA-seq data processing tools only run on a single machine and thus posing a high demand on hardware configurations, e.g., the number of CPU cores and the memory size. 
 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
 SparkBWA~\cite{Abun2016SparkBWA} xxx.
 GPF~\cite{Li2018Highperformance} xxx. 
-Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the feature quantitative softwares for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
-First, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols.
+Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
+Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
 Secondly, the performance gain of Falco basically lies in xxx. It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
 
 We present scSpark, a scRNA-seq data processing pipeline using the Spark framework, for high performance data processing on a cluster of computers. 
@@ -163,7 +163,7 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 
 \section{Method}
 \subsection{Overview}
-ScSpark implemented cell barcode and UMI correct, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
+ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
 ScSpark run program across Spark's cluster and default cache data in memory. 
 We implemented cell barcode and UMI correct when Spark's cluster load data and abstract them to RDD.
 And we developed a high concurrency Spark version sequence quality control. 
