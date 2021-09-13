@@ -109,7 +109,7 @@ Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) a
 SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spark for improving the efficiency of NGS data processing.
 Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
 Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
-Secondly, the performance gain of Falco basically lies in distributed compute.
+Secondly, the performance gain of Falco basically comes from distributed computing.
 It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
 
 We present scSpark, a scRNA-seq data processing pipeline using the Spark framework, for high performance data processing on a cluster of computers. 
@@ -163,25 +163,60 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 
 \section{Method}
 \subsection{Overview}
+
+ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting, and is built on UMI-tools on the Spark framework. 
+Therefore scSpark inherently runs on clusters and benefits from the in-memory data storyage in Spark. 
+First, cell barcode extraction is performed in parallel with Spark cluster's loading of raw FASTQ data, and the processed reads are saved to an RDD object. 
+The data loading will automatically distribute the reads to the nodes in the cluster. %, and the reads that belong to the same cell will be sent to the same node, thanks to the cell barcodes (I don't think this is correct). 
+A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
+After that, STAR is applied on each node in the cluster for sequence alignment. 
+Finally, the alignment results from all nodes are aggregated and the cell count matrix is generated. 
+
+
+\iffalse
 ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
 ScSpark run program across Spark's cluster and default cache data in memory. 
 We implemented cell barcode and UMI correct when Spark's cluster load data and abstract them to RDD.
 And we developed a high concurrency Spark version sequence quality control. 
 After that, scSpark processed STAR's program on each node in the cluster.
 In the end, scSpark grouped each cell's record and distributed conut the result.
+\fi
 
-\subsection{Simple barcode and UMI correct}
+\subsection{FASTQ data loader and barcode extraction}
+
+Our FASTQ data loader is adapted from Hadoop-BAMA\cite{hadoopBAM}, a Java library for manipulation of NGS data in the Hadoop distributed computing framework. 
+During data loading, scSpark extracts cell barcodes from reads, distributes reads to different nodes according to the extracted barcodes, and writes these reads to FASTQ RDD objects, all in a distributed manner. 
+As multiple node computers read FASTQ files in parallel, the data loading speed is not limited by the access speed of a harddisk. 
+Note that for paired-end reads, (ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.???)
+
+\iffalse
 We override FASTQ hadoop loading api~(\url{https://github.com/HadoopGenomics}).
 Large FASTQ files can be loaded in each node's memory parallel.
 So scSpark's loading speed doesn't limit by single node disk access speed.
 In this step, scSpark splits barcode and UMI when scSpark load FASTQ file to FASTQ RDD.
 ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.
+\fi
 
-\subsection{Spark version sequence quality control}
+
+\subsection{Sequence quality control using Spark}
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{Fig1.pdf}
 	\caption{An overview of sequence quality control module based on Spark.} \label{fig1}
 \end{figure}
+
+Fig.~\ref{fig1} shows the workflow for sequence QC in scSpark, which consists of two components. 
+First, from the FASTQ R1 RDD, we calculated the number of occurrences for each barcode and consider the most frequent barcodes as high confidence cell barcodes. This whitelist of barcodes is saved as an RDD object. 
+By using reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
+After that, we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster.
+Then scSpark can easily uses whitelist RDD to filter cached FASTQ R1 RDD by using Spark's join function to generate extracted FASTQ R1 RDD.
+In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
+It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
+The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
+
+(by thresholding)
+
+
+\iffalse
 As shown in Fig~\ref{fig1}, the sequence quality control step typically consists of two main components.
 First, generating whitelist RDD including identities of the true cell barcodes is unknown.
 After FASTQ R1 RDD generated, we calculated the number of occurences for each CB and selected the most frequent CBs, named whitelist RDD, as intermediate results. 
@@ -191,11 +226,12 @@ Then scSpark can easily uses whitelist RDD to filter cached FASTQ R1 RDD by usin
 In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
 It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
 The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
+\fi
 
 \subsection{Eleminate redundancy disk access in aligner step}
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{Fig2.pdf}
-	\caption{New way to implement STAR's interface.} \label{fig2}
+	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
 \end{figure}
 % Apart from Cellranger we can't know how it implements because it isn't an open source software. 
 In previous pipeline, STAR needs to load extracted FASTQ R2 file and FASTQ R1 file.
