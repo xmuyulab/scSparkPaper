@@ -83,7 +83,7 @@ scRNA-seq data processing, Apache Spark, cloud computing
 
 \section{Introduction}
 Single cell is the fundamental unit of a living organism.
-In the era of precision medicine, exploring the gene expression at single cell level has become crucial to discover new cell types and study biological processes in complex tumor samples.
+In the era of precision medicine, exploring the gene expression at single cell level has become crucial to discover new cell identities and study biological processes in complex tumor samples.
 In the past decade, RNA-seq has been widely used to study gene expression patterns in biological samples.
 However, the resolution of bulk RNA-seq could only reach the average level of cell populations. 
 scRNA-seq essentially reveals the transcriptional status at single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}.
@@ -100,9 +100,9 @@ Subsequently, the remaining FASTQ reads are mapped to the reference genome using
 Finally, the reads are assigned to genes and the count matrices for UMIs are generated~\cite{Parekh2018zUMIs}. 
 
 Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
-CellRanger is a highly integrated data processing software tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
-UMI-tools xxx.
-STARsolo xxx. 
+CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
+UMI-tools is a comprehensive scRNA-seq data processing suite with the directional barcode collapse algorithm integrated that cosiderably promotes the transcript quantification accuracy.
+STARsolo is a recently developed  extended pipeline based on the original genome aligner STAR to adapt the single-cell applications. 
 However, these scRNA-seq data processing tools only run on a single machine and thus posing a high demand on hardware configurations, e.g., the number of CPU cores and the memory size. 
 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
