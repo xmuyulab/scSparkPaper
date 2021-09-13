@@ -202,19 +202,19 @@ ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and us
 \subsection{Sequence quality control using Spark}
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{Fig1.pdf}
-	\caption{An overview of sequence quality control module based on Spark.} \label{fig1}
+	\caption{An overview of sequence quality control module in scSpark.} \label{fig1}
 \end{figure}
 
 Fig.~\ref{fig1} shows the workflow for sequence QC in scSpark, which consists of two components. 
 First, from the FASTQ R1 RDD, we calculated the number of occurrences for each barcode and consider the most frequent barcodes as high confidence cell barcodes. This whitelist of barcodes is saved as an RDD object. 
-By using reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
+By using the reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
 After that, we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster.
 Then scSpark can easily uses whitelist RDD to filter cached FASTQ R1 RDD by using Spark's join function to generate extracted FASTQ R1 RDD.
 In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
 It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
 The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
 
-(by thresholding)
+(the whitelist of barcodes is obtained by thresholding the number of occurrences)
 
 
 \iffalse
@@ -229,17 +229,26 @@ It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line i
 The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
 \fi
 
-\subsection{Eleminate redundancy disk access in aligner step}
+\subsection{Minimize disk access in sequence alignment}
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{Fig2.pdf}
 	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
 \end{figure}
+
+In traditional pipelines that are not designed for in-memory computing, the sequence aligner loads FASTQ files from harddisks. 
+Disk IO is time consuming especially for large files. 
+Similar to CellRanger, UMI-tools, and STARsolo, we use STAR as the aligner in scSpark. 
+We encapsulated the STAR aligner as a shared object, and re-designed the interface for STAR with Java Native Interface such the aligner loads reads from our FASTQ RDD, and outputs alignment results to a SAM RDD object (Fig.~\ref{fig2}). 
+In this way scSpark avoids the heavy burden on disk IO for reading FASTQ files and writing SAM files. 
+
+\iffalse
 % Apart from Cellranger we can't know how it implements because it isn't an open source software. 
 In previous pipeline, STAR needs to load extracted FASTQ R2 file and FASTQ R1 file.
 This way will generate unneccessary disk access. 
 We chose STAR as our aligner and modified STAR's loading FASTQ way to avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
 As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process.
 The STAR aligner was encapsulated as a shared object and invoked the shared object as our aligner. 
+\fi
 To overcome imbalance problem of each node's data volume, we repartitioned the extracted FASTQ R2 RDD before transfer FASTQ RDD to STAR.
 Each node could run STAR parallelly with counterpoise data volume. 
 We also found if node's in-memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing.
