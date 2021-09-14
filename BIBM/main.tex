@@ -188,6 +188,7 @@ In the end, scSpark grouped each cell's record and distributed conut the result.
 Our FASTQ data loader is adapted from Hadoop-BAMA\cite{hadoopBAM}, a Java library for manipulation of NGS data in the Hadoop distributed computing framework. 
 During data loading, scSpark extracts cell barcodes from reads, distributes reads to different nodes according to the extracted barcodes, and writes these reads to FASTQ RDD objects, all in a distributed manner. 
 As multiple node computers read FASTQ files in parallel, the data loading speed is not limited by the access speed of a harddisk. 
+% RDD可以是(key, value)（像数据结构中的map）这样的格式，为了下一步的处理，将FASTQ R1 RDD处理为(R1 cell barcode, R1 read name + R1 UMI + R1第四行)这样的格式
 Note that for paired-end reads, (ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.???)
 
 \iffalse
@@ -251,7 +252,9 @@ The STAR aligner was encapsulated as a shared object and invoked the shared obje
 \fi
 
 
+% Spark有repartition函数可以直接进行分区，然后我们比如4000000个read(FASTQ R2 RDD)，4个node会根据node情况分成4个区，每个区1000000个reads(FASTQ R2 RDD)
 To balance the data processing tasks among different computing nodes, we repartitioned the FASTQ R2 RDD (how???) before sending reads to STAR. 
+% 可以改成随着单台机器的内存越来越大吗？
 In addition, for high-performance workstations with a large memory (how large?), it is possible to run multiple STAR instances in one node to further speed up the alignment process. 
 
 \iffalse
@@ -409,8 +412,8 @@ As shown in Fig~\ref{fig5}, we found that UMI\-tools' speedup is poor when CPU c
 Except align step, UMI-tools processes on single thread which causes it can't take advantage of CPU cores number increase.
 So UMI\-tools' scalability is weak.
 STAR-solo and Cellranger shows poorer scalability when CPU cores number increase.
-When CPU cores number increased from 16 to 32, STAR-solo achieved approximate average 40\% speedup and Cellranger achieved approximate ?\% speedup.
-When CPU cores number increased from 32 to 64, STAR-solo's speedup was average 20\% and Cellranger speedup was average ?\%.
+When CPU cores number increased from 16 to 32, STAR-solo achieved approximate average 40\% speedup and Cellranger achieved approximate 10\% speedup.
+When CPU cores number increased from 32 to 64, STAR-solo's speedup was average 20\% and Cellranger speedup was average 4.6\%.
 Both pipelines speedup rate will decrease when CPU cores increase.
 
 \begin{figure}
