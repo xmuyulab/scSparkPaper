@@ -118,8 +118,6 @@ We present scSpark, a scRNA-seq data processing pipeline using the Spark framewo
 To meet the demand of computing and storage resources for super-large scale scRNA-seq data, 
 our pipeline design not only implements the parallelism of multiple data processing procedures, minimize unnecessary disk access, but also considers the scalability in task distribution such that scSpark can run on either a single computer or on a cluster of computers. 
 
-
-
 \iffalse
 % Individual cells are the smallest unit of life, such as tissues and organs.
 % According to the central dogma of molecular biology, one of the major factors that determines the function of every cell is its transcriptional program.
@@ -381,11 +379,11 @@ To illustrate the main source of the significant improvement brought by scSpark,
 
 \begin{figure*}
 	\includegraphics[width=0.8\textwidth]{Fig4.pdf}
-	\caption{Comparison of UMI-tools and scSpark's first step.} \label{fig4}
+	\caption{Comparison of UMI\-tools and scSpark's first step.} \label{fig4}
 \end{figure*}
 
 As shown in Fig.~\ref{fig4}, scSpark achieved significantly shorter processing time in all three steps. 
-For barcode extraction and quality control, scSpark achieved approximate 50x-fold faster than UMI-tools.
+For barcode extraction and quality control, scSpark achieved approximate 50x-fold faster than UMI\-tools.
 For sequence alignment, scSpark's get approximate 3x-fold faster than UMI-tools mostly due to reduce disk access.
 For read count, due to each cell record's number imbalance, scSpark's speedup rate isn't stable.
 \iffalse
@@ -407,7 +405,7 @@ This way also gets great improve compare with UMI-tools.
 \subsection{scalability evaluation} 
 Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala out to improve process speed.
 \begin{figure*}
-	\includegraphics[width=0.8\textwidth]{Fig5.pdf}
+	\includegraphics[width=0.8\textwidth]{fig5.pdf}
 	\caption{An overview of tradition pipelines' speedup.} \label{fig5}
 \end{figure*}
 Due to the limited of single machine CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
