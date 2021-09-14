@@ -66,14 +66,17 @@ rsyu@xmu.edu.cn}
 \maketitle
 
 \begin{abstract}
-  High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines typically integrate multiple modules to transform raw scRNA-seq data to gene expression matrices, including barcode processing, sequence quality control, genome alignment and transcript counting. 
-  With the drastic increase in scRNA-seq data volume, file input/output (IO) has become a bottleneck of the processing speed of existing tools. 
+%Single-cell RNA-seq (scRNA-seq) is increasingly used in a range of biomedical studies. Nonetheless, current RNA-seq analysis tools are not specifically designed to efficiently process scRNAseq data due to their limited scalability
+High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines integrate multiple modules to transform raw scRNA-seq data to gene expression matrices, including barcode processing, sequence quality control, genome alignment and transcript counting.
+Due to the large data volume of a scRNA-seq study, the speed of scRNA-seq data processing pipeline has become a major bottleneck to scRNA-seq study. 
 %  In this study, we took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based scRNA-seq data processing pipeline, named scSpark. 
-We build a Java-based scRNA-seq data processing pipeline, the scSpark, using Apache Spark's in-memory computing and inherent scalable technologies. 
-  % We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
-  To reduce unnecessary disk access while reading FASTQ files and writing SAM files, we used the Java Native Interface (JNI) to deliver FASTQ Resilient Distributed Datasets (RDD), and retrieved genome mapping results to SAM RDD. 
-  By allocating scRNA-seq data and processing tasks to a computer cluster, the scSpark toolkit can significantly reduce disk access for saving and loading temporary results. 
-  To evaluate the performance of scSpark, we built a spark cluster on Aliyun, and compared its computational performance and biological analysis robustness with several state-of-the-art data processing pipelines. The results indicate that scSpark is more efficient and more scalable than the other  tools. 
+%Here we introduce Falco, a cloud-based framework to enable paralellisation of existing RNA-seq processing pipelines using big data technologies of Apache Hadoop and Apache Spark for performing massively parallel analysis of large scale transcriptomic data. 
+In this study, we developed scSpark, a cloud-computing based scRNA-seq processing pipeline. 
+% We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
+%To reduce unnecessary disk access while reading FASTQ files and writing SAM files, we used the Java Native Interface (JNI) to deliver FASTQ Resilient Distributed Datasets (RDD), and retrieved genome mapping resul ts to SAM RDD. 
+%Using two public scRNA-seq data sets and two popular RNA-seq alignment/feature quantification pipelines, we show that the same processing pipeline runs 2.6 – 145.4 times faster using Falco than running on a highly optimised single node analysis.
+By leveraging Apache Spark's in-memory computing capability, scSpark significantly increases the processing speed of scRNA-seq data, and achieves 5-20 times faster than state-of-the-art processing pipelines under the same CPU core consumption. In addition, due to Spark's  inherent scalability in a cloud-computing environment, scSpark can further decrease the processing time for a typical scRNAseq dataset (e.g., 600 million reads) from hours to minutes when multiple computer nodes (e.g., 16) are used.  
+Biological evaluation also confirmed that the results produced by scSpark is highly consistent with existing scRNAseq pipelines.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -83,40 +86,35 @@ scRNA-seq data processing, Apache Spark, cloud computing
 
 \section{Introduction}
 Single cell is the fundamental unit of a living organism.
-In the era of precision medicine, exploring the gene expression at single cell level has become crucial to discover new cell identities and study biological processes in complex tumor samples.
-In the past decade, RNA-seq has been widely used to study gene expression patterns in biological samples.
+Historically, RNA-seq has been widely used to study gene expression patterns in biological samples.
 However, the resolution of bulk RNA-seq could only reach the average level of cell populations. 
-scRNA-seq essentially reveals the transcriptional status at single cell level, which provides the basis for subsequent bioinformatics analysis~\cite{Papalexi2018SinglecellRS}.
+With the development of single-cell sequencing technologies, scRNA-seq now allows transcript sequencing of thousands of cells simultaneously in a single experiment, and has emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}
 
-High-throughput scRNA-seq protocols, which enable transcript sequencing of thousands of cells simultaneously in a single experiment, have emerged as powerful tools to identify and characterize cell types in complex and heterogeneous tissues~\cite{Zhang2019ComparativeAO}.
-In order to demultiplex the reads for inidividual cells after sequencing~\cite{Tian2018scPipe}, two oligonucleotide barcodes, the cell barcode (CB) and the unique molecular identifier (UMI), have been introduced in single cell sequencing~\cite{Rosenberg2018SinglecellPO,Cao2017ComprehensiveSC}. 
-When using the CB, different barcode sequences are assigned to each cell for transcript source retrieval after sequencing, thus greatly improving the throughput and reducing the cost of scRNA-seq~\cite{Macosko2015HighlyPG,Klein2015DropletBF}. 
-UMIs are random oligonucleotide barcodes used in single cell sequencing to distinguish redundant transcripts generated from PCR amplification~\cite{Kivioja2012Counting,Camara2017Methods,Smith2017UMItools}. 
+%In order to demultiplex the reads for inidividual cells after sequencing~\cite{Tian2018scPipe}, two oligonucleotide barcodes, the cell barcode (CB) and the unique molecular identifier (UMI), have been introduced in single cell sequencing~\cite{Rosenberg2018SinglecellPO,Cao2017ComprehensiveSC}.  When using the CB, different barcode sequences are assigned to each cell for transcript source retrieval after sequencing, thus greatly improving the throughput and reducing the cost of scRNA-seq~\cite{Macosko2015HighlyPG,Klein2015DropletBF}. UMIs are random oligonucleotide barcodes used in single cell sequencing to distinguish redundant transcripts generated from PCR amplification~\cite{Kivioja2012Counting,Camara2017Methods,Smith2017UMItools}. 
 
-Various scRNA-seq data processing pipelines have been developed, which typically implement multiple modules including barcode processing, sequence quality control (QC), genome alignment and transcript counting, to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
-First, the barcodes are extracted from a pre-designed nucleotide site for different scRNA-seq protocols. 
-In QC, the FASTQ reads with low quality nucleotides are filtered based on user-defined thresholds. 
-Subsequently, the remaining FASTQ reads are mapped to the reference genome using a splice-aware aligner, such as STAR~\cite{Dobin2013STAR} and HISAT2~\cite{Kim2015HISAT}. 
-Finally, the reads are assigned to genes and the count matrices for UMIs are generated~\cite{Parekh2018zUMIs}. 
-
+To enable efficient bioinformatics processing of sequencing data produced from scRNA-seq studies, various scRNA-seq data processing pipelines have been developed. A fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including unique molecular identifier (UMI) barcode [] processing, sequence quality control (QC) [], genome alignmentR~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
+%First, the barcodes are extracted from a pre-designed nucleotide site for different scRNA-seq protocols. In QC, the FASTQ reads with low quality nucleotides are filtered based on user-defined thresholds.  Subsequently, the remaining FASTQ reads are mapped to the reference genome using a splice-aware aligner, such as STAR~\cite{Dobin2013STAR} and HISAT2~\cite{Kim2015HISAT}. Finally, the reads are assigned to genes and the count matrices for UMIs are generated~\cite{Parekh2018zUMIs}. 
 Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
 CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
 UMI-tools is a comprehensive scRNA-seq data processing suite with the directional barcode collapse algorithm integrated that cosiderably promotes the transcript quantification accuracy.
 STARsolo is a recently developed extended pipeline based on the original genome aligner STAR to adapt the single-cell applications. 
-However, these scRNA-seq data processing tools only run on a single machine and thus posing a high demand on hardware configurations, e.g., the number of CPU cores and the memory size. 
+However, these scRNA-seq data processing pipelines lack the scalability to meet the computational demand from the large volume of scRNA-seq data from increasing amount of single-cell studies. 
+
+%super-large scale scRNA-seq data
 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
-SparkBWA~\cite{Abun2016SparkBWA} is a pipeline based on Spark which can speed up the alignment.
-And GPF~\cite{Li2018Highperformance} is a fast in-memory computing framework with Spark for large-scale genomic data processing.
-Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing.
-Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
-Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
-Secondly, the performance gain of Falco basically comes from distributed computing.
-It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
+SparkBWA~\cite{Abun2016SparkBWA} exploits the capabilities of Spark to boost the performance of one of the most widely adopted aligner for NGS data, the Burrows-Wheeler Aligner (BWA). 
+GPF~\cite{Li2018Highperformance} is a fast in-memory computing framework implemented based on Spark for implementing NGS data processing pipelines in a cloud-computing environment. 
+Following the success of cloud-based implementation of NGS data processing pipelines, Falco~\cite{Yang2017Falco} concatenates the read aligner and transcript quantification software tools using Spark for scRNA-seq data preprocessing.
+Although Falco improves the performance of scRNA-seq data processing when a distributed computing environment is available, it doesn't support unique molecular identifier (UMI) barcode processing. Hence, it is incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq. In addition, it doesn't leverage the in-memory computing capability of Spark to reduce the disk read/write operations of intermediate software processing steps for further performance speedup.  
 
-We present scSpark, a scRNA-seq data processing pipeline using the Spark framework, for high performance data processing on a cluster of computers. 
-To meet the demand of computing and storage resources for super-large scale scRNA-seq data, 
-our pipeline design not only implements the parallelism of multiple data processing procedures, minimize unnecessary disk access, but also considers the scalability in task distribution such that scSpark can run on either a single computer or on a cluster of computers. 
+Herein, we present scSpark, a scRNA-seq data processing pipeline using the Spark framework for high performance data processing in cloud computing environment. 
+To meet the computational demand from processing large volume of scRNA-seq data, 
+we developed scSpark, a high-performance, scalable, in-memory scRNA-seq data processing pipeline to support large-scale scRNA-seq data processing. More specifically, 
+by implementing and integrating multiple bioinformatic processing steps of a standard scRNA-seq processing pipeline with the in-memory computing framework of Spark, scSpark eliminates the need for laborious disk read/write operations associated with traditional bioinformatics tools. As a result, scSpark is able to improve the scRNAseq data processing speed by more than ten-folds compared to other state-of-the-art software tools under the same CPU core consumption. In addition, by leveraging the parallel computing capability of Spark engine, scSpark further enables users to distribute their scRNA-seq data processing workloads to multiple computational nodes, thus dramatically increases their processing throughput of scRNA-seq data for large-scale studies. 
+
+%GPF is freely available: https://github.com/fhyxz/GPF.git. This paper is organized as follows: Section 2 provides background information on genomic analytics pipelines. Section 3 explains the APIs of the GPF, and Section 4 describes the execution engine of GPF. Section 5 evaluates our solution on a 2048 cores compute cluster and analyzes the most important factors to the performance of our GPF. Finally, we discuss related work in Section 6 before concluding in Section 7.
+
 
 \iffalse
 % Individual cells are the smallest unit of life, such as tissues and organs.
