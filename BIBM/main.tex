@@ -201,7 +201,7 @@ ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and us
 
 \subsection{Sequence quality control using Spark}
 \begin{figure}
-	\includegraphics[width=0.45\textwidth]{Fig1.pdf}
+	\includegraphics[width=0.45\textwidth]{figure1.png}
 	\caption{An overview of sequence quality control module in scSpark.} \label{fig1}
 \end{figure}
 
@@ -231,7 +231,8 @@ The last step in sequence quality control was using join function again to combi
 
 \subsection{Minimize disk access in sequence alignment}
 \begin{figure}
-	\includegraphics[width=0.45\textwidth]{Fig2.pdf}
+\centering
+	\includegraphics[width=0.35\textwidth]{figure2.png}
 	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
 \end{figure}
 
@@ -265,7 +266,8 @@ Here, We used Java Native Interface again to transfer STAR results and directly 
 
 \subsection{Count with multi-node}
 \begin{figure}
-	\includegraphics[width=0.45\textwidth]{Fig3.pdf}
+\centering
+	\includegraphics[width=0.45\textwidth]{figure3.png}
 	\caption{An overview of Spark version count.} \label{fig3}
 \end{figure}
 
