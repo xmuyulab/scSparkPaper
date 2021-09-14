@@ -421,7 +421,7 @@ When CPU cores number increased from 32 to 64, STAR-solo's speedup was average 2
 Both pipelines speedup rate will decrease when CPU cores increase.
 
 \begin{figure}
-	\includegraphics[width=0.45\textwidth]{fig7.pdf}
+	\includegraphics[width=0.45\textwidth]{fig6.pdf}
 	\caption{scSpark's speedup.} \label{fig6}
 \end{figure}
 As shown in Fig~\ref{fig6}, we found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
@@ -446,7 +446,7 @@ Due to UMI\-tools' processes on single thread except align step, this pipelines'
 As shown in Table~\ref{tab3}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
 STAR's speedup rate not only decrease when CPU cores number increase but also have a bottleneck when CPU cores number increase from 32 to 64.
 \begin{figure}
-	\includegraphics[width=0.45\textwidth]{fig6.pdf}
+	\includegraphics[width=0.45\textwidth]{fig7.pdf}
 	\caption{scSpark's mapping speedup.} \label{fig7}
 \end{figure}
 As Fig~\ref{fig7} shown, we found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
