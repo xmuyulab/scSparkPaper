@@ -108,7 +108,8 @@ However, these scRNA-seq data processing tools only run on a single machine and 
 Recently, big data frameworks such as Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for the next generation sequencing (NGS) data. 
 SparkBWA~\cite{Abun2016SparkBWA} is a pipeline based on Spark which can speed up the alignment.
 And GPF~\cite{Li2018Highperformance} is a fast in-memory computing framework with Spark for large-scale genomic data processing.
-Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing. Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
+Following these advances in NGS data processing, Falco~\cite{Yang2017Falco} used Spark to concatenate the aligner and the transcript quantification software tools for scRNA-seq data preprocessing.
+Falco improved performance greatly compared to existing single workstation solutions, however, it still suffers from two limitations. 
 Firstly, Falco does not deal with CBs and UMIs and is therefore incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq.
 Secondly, the performance gain of Falco basically comes from distributed computing.
 It does not reduce the amount of disk reads and writes during alignment and transcript counting. 
@@ -277,6 +278,7 @@ Here, We used Java Native Interface again to transfer STAR results and directly 
 The gene transfer format (GTF) files contains gene structure information and are used for counting gene expressions of cells.  
 In scSpark, we implemented a multi-node in-memory counting approach. 
 First, the GTF files are loaded to memory as GTF RDD objects. 
+% 修改成 After that scSpark grouped SAM RDD and GTF RDD by their record's chromosome information.
 (After that scSpark grouped SAM RDD and GTF RDD according to their cell name. ???)
 Then we used the Spark flatMap function to compute the read count for each cell in parallel. 
 \iffalse
