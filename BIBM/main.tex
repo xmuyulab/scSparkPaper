@@ -185,7 +185,7 @@ And we split these steps into three major parts: (i) load FASTQ files, extract b
 % A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
 % After that, STAR is applied on each node in the cluster for sequence alignment. 
 % Finally, the alignment results from all nodes are aggregated and the cell count matrix is generated. 
-Next we explain scSpark's way to implement each part.
+Next we explain scSpark's way to implement each part and the way to evaluate our scSpark.
 
 \iffalse
 ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
