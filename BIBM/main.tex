@@ -94,7 +94,7 @@ With the development of single-cell sequencing technologies, scRNA-seq now allow
 %In order to demultiplex the reads for inidividual cells after sequencing~\cite{Tian2018scPipe}, two oligonucleotide barcodes, the cell barcode (CB) and the unique molecular identifier (UMI), have been introduced in single cell sequencing~\cite{Rosenberg2018SinglecellPO,Cao2017ComprehensiveSC}.  When using the CB, different barcode sequences are assigned to each cell for transcript source retrieval after sequencing, thus greatly improving the throughput and reducing the cost of scRNA-seq~\cite{Macosko2015HighlyPG,Klein2015DropletBF}. UMIs are random oligonucleotide barcodes used in single cell sequencing to distinguish redundant transcripts generated from PCR amplification~\cite{Kivioja2012Counting,Camara2017Methods,Smith2017UMItools}. 
 
 To enable efficient bioinformatics processing of sequencing data produced from scRNA-seq studies, various scRNA-seq data processing pipelines have been developed.
-A fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including unique molecular identifier (UMI) barcode~\cite{Smith2017UMItools} processing, sequence quality control (QC)~\cite{schmieder2011quality}, genome alignmentR~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
+A fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including unique molecular identifier (UMI) barcode~\cite{Smith2017UMItools} processing, sequence quality control (QC)~\cite{schmieder2011quality}, genome alignment~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
 %First, the barcodes are extracted from a pre-designed nucleotide site for different scRNA-seq protocols. In QC, the FASTQ reads with low quality nucleotides are filtered based on user-defined thresholds.  Subsequently, the remaining FASTQ reads are mapped to the reference genome using a splice-aware aligner, such as STAR~\cite{Dobin2013STAR} and HISAT2~\cite{Kim2015HISAT}. Finally, the reads are assigned to genes and the count matrices for UMIs are generated~\cite{Parekh2018zUMIs}. 
 Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
 CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
@@ -147,7 +147,7 @@ Furthermore, STARsolo~\cite{Blibaum2019STARsolo} has improved the parallelism of
 Great improvement has been achieved recently for the development of scRNA-seq data processing tools. However, all the avaliable scRNA-seq data processing tools can only run on a single machine with limited running speed, and cannot be extended to multiple nodes.
 
 In recent years, there have been many studies focusing on the optimization of next generation sequencing (NGS) data processing using big data framework like Hadoop (\url{https://hadoop.apache.org}) and Spark (\url{https://spark.apache.org}). 
-Due to higher efficiency in utilizing memory computing, Spark is a better big data computing framework than Hadoop's MapReduce~\cite{Dean2008MapReduce, Zaharia2012Resilient}. 
+Due to higher efficiency in utilizing memory computing, Spark is a better big data computing framework than Hadoop's MapReduce~\cite{Dean2008MapReduce, zaharia2010spark, Zaharia2012Resilient}. 
 SparkBWA~\cite{Abun2016SparkBWA} and GPF~\cite{Li2018Highperformance} are good frameworks with Spart for improving the efficiency of NGS data processing. 
 Falco~\cite{Yang2017Falco} has tried to use Spark in scRNA-seq data preprocessing, but it has two limitations. 
 
@@ -168,17 +168,24 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 \section{Method}
 \subsection{Overview}
 
-ScSpark was designed on the top of the Spark framework.
+ScSpark is designed on the top of the Spark~\cite{zaharia2010spark} framework.
 % implemented refered to UMI\-tools, including barcode extraction, sequence quality control, genome alignment, and transcript counting, and is built on the top of Spark framework. 
-% 参考：We design our engine on top of the Spark framework, which by default keeps persistent RDDs in memory. 
-Therefore scSpark inherently take advantage of Spark's trait including distribute compute and default keeps persistent RDDs in memory.
-ScSpark's algorithm refers to UMI\-tools, including barcode extraction, sequence quality control, genome alignment and transcipt counting.
-First, cell barcode extraction is performed in parallel with Spark cluster's loading of raw FASTQ data, and the processed reads are saved to an RDD object. 
-The data loading will automatically distribute the reads to the nodes in the cluster. %, and the reads that belong to the same cell will be sent to the same node, thanks to the cell barcodes (I don't think this is correct). 
-A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
-After that, STAR is applied on each node in the cluster for sequence alignment. 
-Finally, the alignment results from all nodes are aggregated and the cell count matrix is generated. 
-
+% ref：We design our engine on top of the Spark framework, which by default keeps persistent RDDs in memory. 
+Therefore scSpark inherently take advantage of Spark's trait including distribute compute and default keeps persistent Resilient Distributed Datasets (RDDs)~\cite{Zaharia2012Resilient} in memory.
+% ref: This paper is focused on sharing our experiences designing a Spark-based pipeline for GATK.
+% ref: There are three major steps in this reads-to-variant pipeline shown in Figure 1: 
+% ref: (i) align reads to a reference or genome (Aligner),
+% ref: (ii) manipulating the read alignments by sorting/indexing and eliminating dupli- cates (Cleaner) and 
+% ref: (iii) variant discovery and genotyping (Caller).
+% ref: Here we explain the major conceptual and general applications for each category.
+ScSpark's algorithm refers to UMI\-tools.
+% including barcode extraction, sequence quality control, genome alignment and transcipt counting.
+And we split these steps into three major parts: (i) load FASTQ files, extract barcode and sequnence quality control, (ii) align extracted FASTQ reads to a reference or genome, (iii) quantify transcript.
+% The data loading will automatically distribute the reads to the nodes in the cluster. %, and the reads that belong to the same cell will be sent to the same node, thanks to the cell barcodes (I don't think this is correct). 
+% A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
+% After that, STAR is applied on each node in the cluster for sequence alignment. 
+% Finally, the alignment results from all nodes are aggregated and the cell count matrix is generated. 
+Next we explain scSpark's way to implement each part.
 
 \iffalse
 ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
