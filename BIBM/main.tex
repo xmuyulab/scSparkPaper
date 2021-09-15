@@ -168,8 +168,11 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 \section{Method}
 \subsection{Overview}
 
-ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting, and is built on UMI-tools on the Spark framework. 
-Therefore scSpark inherently runs on clusters and benefits from the in-memory data storyage in Spark. 
+ScSpark was designed on the top of the Spark framework.
+% implemented refered to UMI\-tools, including barcode extraction, sequence quality control, genome alignment, and transcript counting, and is built on the top of Spark framework. 
+% 参考：We design our engine on top of the Spark framework, which by default keeps persistent RDDs in memory. 
+Therefore scSpark inherently take advantage of Spark's trait including distribute compute and default keeps persistent RDDs in memory.
+ScSpark's algorithm refers to UMI\-tools, including barcode extraction, sequence quality control, genome alignment and transcipt counting.
 First, cell barcode extraction is performed in parallel with Spark cluster's loading of raw FASTQ data, and the processed reads are saved to an RDD object. 
 The data loading will automatically distribute the reads to the nodes in the cluster. %, and the reads that belong to the same cell will be sent to the same node, thanks to the cell barcodes (I don't think this is correct). 
 A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
@@ -309,7 +312,7 @@ And scSpark refers to UMI-tools, we choose UMI-tools each step's performance as 
 
 Except performance evaluate, we calculated scSpark's speed improve rate when Spark cluster CPU cores improve.
 And we used tradition pipelines' speed improve rate as baseline when pipelines' CPU cores improve from 32 to 64.
-After that, we tested scSpark's each step scalability and comapred with UMI\_tools.
+After that, we tested scSpark's each step scalability and comapred with UMI\-tools.
 In align step, four pipelines' align step all based on STAR's program.
 So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
 
@@ -320,7 +323,7 @@ And then we compared two tools transcript analysis's result and cell cluster ana
 Under hgmm-10k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation.
 
 \section{Results}
-%First, we compared each pipeline's speed in same CPU cores number.Due to scSpark refers UMI\_tools, then we compared each step's speed of scSpark with UMI\_tools.After that, we contrasted each pipleline's scalability, and contrasted each step's scalability with UMI\_tools.In the end, we verified scSpark's result by comparing with UMI\_tools's result.
+%First, we compared each pipeline's speed in same CPU cores number.Due to scSpark refers UMI\-tools, then we compared each step's speed of scSpark with UMI\-tools.After that, we contrasted each pipleline's scalability, and contrasted each step's scalability with UMI\-tools.In the end, we verified scSpark's result by comparing with UMI\-tools's result.
 
 \subsection{Efficiency evaluation}
 
