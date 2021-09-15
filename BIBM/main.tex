@@ -115,12 +115,10 @@ To meet the computational demand from processing large volume of scRNA-seq data,
 we developed scSpark, a high-performance, scalable, in-memory scRNA-seq data processing pipeline to support large-scale scRNA-seq data processing. More specifically, 
 by implementing and integrating multiple bioinformatic processing steps of a standard scRNA-seq processing pipeline with the in-memory computing framework of Spark, scSpark eliminates the need for laborious disk read/write operations associated with traditional bioinformatics tools.
 As a result, scSpark is able to improve the scRNAseq data processing speed by more than ten-folds compared to other state-of-the-art software tools under the same CPU core consumption. In addition, by leveraging the parallel computing capability of Spark engine, scSpark further enables users to distribute their scRNA-seq data processing workloads to multiple computational nodes, thus dramatically increases their processing throughput of scRNA-seq data for large-scale studies. 
+ScSpark is freely available: \url{https://github.com/xmuyulab/spark-scRNASeq-Analysis.git}.
+%After Introduction, we provides method to implement scSpark. Subsequenctly, we evaluates scSpark on a 256 (16*16) cores compute cluster and analyzes scSpark's performance and scalability. Finally, we conlude ..  concluding in the end.
 
-ScSpark is freely obtainable: https://github.com/xmuyulab/
-spark-scRNASeq-Analysis.git.
-After Introduction, we provides method to implement scSpark.
-Finally we evaluates scSpark on a 256 (16*16) cores compute cluster and analyzes scSpark's performance and scalability before concluding in the end.
-
+% GPF is freely available: https://github.com/fhyxz/GPF.git. This paper is organized as follows: Section 2 provides background information on genomic analytics pipelines. Section 3 ex- plains the APIs of the GPF, and Section 4 describes the exe- cution engine of GPF. Section 5 evaluates our solution on a 2048 cores compute cluster and analyzes the most important factors to the performance of our GPF. Finally, we discuss related work in Section 6 before concluding in Section 7.
 
 \iffalse
 % Individual cells are the smallest unit of life, such as tissues and organs.
@@ -167,25 +165,28 @@ Our work utilized Spark system architecture to develop a quick and scalable scRN
 
 \section{Method}
 \subsection{Overview}
+ScSpark was designed on the top of the Spark~\cite{zaharia2010spark} to leverage two major features provided by the Spark framework for fast scRNA-seq data processing: parallel computing and in memory computing enabled by Spark's Resilient Distributed Datasets (RDDs)~\cite{Zaharia2012Resilient}. 
+The overall workflow of ScSpark follows closely with that of the UMI\-tools.
+% including barcode extraction, sequence quality control, genome alignment and transcipt counting.
+Briefly, the scRNA-seq data processing steps can be grouped into three major parts: (i) Data loading with white-list control, (ii) alignment of extracted reads to a reference genome, (iii) transcript quantification.
+Next we explain the design principle and implementation details of each part of scSpark. 
 
-ScSpark is designed on the top of the Spark~\cite{zaharia2010spark} framework.
 % implemented refered to UMI\-tools, including barcode extraction, sequence quality control, genome alignment, and transcript counting, and is built on the top of Spark framework. 
 % ref：We design our engine on top of the Spark framework, which by default keeps persistent RDDs in memory. 
-Therefore scSpark inherently take advantage of Spark's trait including distribute compute and default keeps persistent Resilient Distributed Datasets (RDDs)~\cite{Zaharia2012Resilient} in memory.
+%Therefore scSpark inherently take advantage of Spark's trait including distribute compute and default keeps persistent Resilient Distributed Datasets (RDDs)~\cite{Zaharia2012Resilient} in memory.
 % ref: This paper is focused on sharing our experiences designing a Spark-based pipeline for GATK.
 % ref: There are three major steps in this reads-to-variant pipeline shown in Figure 1: 
 % ref: (i) align reads to a reference or genome (Aligner),
 % ref: (ii) manipulating the read alignments by sorting/indexing and eliminating dupli- cates (Cleaner) and 
 % ref: (iii) variant discovery and genotyping (Caller).
 % ref: Here we explain the major conceptual and general applications for each category.
-ScSpark's algorithm refers to UMI\-tools.
-% including barcode extraction, sequence quality control, genome alignment and transcipt counting.
-And we split these steps into three major parts: (i) load FASTQ files, extract barcode and sequnence quality control, (ii) align extracted FASTQ reads to a reference or genome, (iii) quantify transcript.
+
+
 % The data loading will automatically distribute the reads to the nodes in the cluster. %, and the reads that belong to the same cell will be sent to the same node, thanks to the cell barcodes (I don't think this is correct). 
 % A high concurrency sequence quality control method designed for the Spark framework is then applied to filter the reads. 
 % After that, STAR is applied on each node in the cluster for sequence alignment. 
 % Finally, the alignment results from all nodes are aggregated and the cell count matrix is generated. 
-Next we explain scSpark's way to implement each part and the way to evaluate our scSpark.
+
 
 \iffalse
 ScSpark implemented barcode extraction, sequence quality control, genome alignment, and transcript counting based on Spark framework and UMI-tools.
@@ -196,36 +197,35 @@ After that, scSpark processed STAR's program on each node in the cluster.
 In the end, scSpark grouped each cell's record and distributed conut the result.
 \fi
 
-\subsection{FASTQ data loader, barcode extraction and Sequence quality control using Spark}
+
+\subsection{Data loading with white list control}
+\iffalse
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{figure1.png}
-	\caption{An overview of sequence quality control module in scSpark.} \label{fig1}
+	\caption{Flowchart of data loader, barcode extraction and quality control in scSpark.} \label{fig1}
 \end{figure}
-As Fig.~\ref{fig1} shown, to overcome inefficiency of tradition pipeline's intensity I/O, scSpark used Spark as FASTQ file data loader.
-ScSpark's FASTQ data loader based on Hadoop-BAM\cite{hadoopBAM}, can easily transfer FASTQ reads to FASTQ RDDs. 
-During loading data, scSpark extracts cell barcodes from reads, and transfer these reads to FASTQ RDD in key-value structure, all in a distributed manner. 
-As multiple node computers read FASTQ files in parallel, the data loading speed is not limited by the access speed of a harddisk. 
-% RDD可以是(key, value)（像数据结构中的map）这样的格式，为了下一步的处理，将FASTQ R1 RDD处理为(R1 cell barcode, R1 read name + R1 UMI + R1第四行)这样的格式
+\fi
+
+To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used. First, we loaded the scRNA-seq reads in FASTQ format [] into RDD using Hadoop-BAM~\cite{hadoopBAM}. During the data loading process, scSpark also extracts cell barcodes from the first read in a read-pair, which are then used as the key to index both reads from the read-pair. Once the RDD is constructed, we used the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the white-list~\cite{guo2018bioinformatics}, which were used to select valid reads for further processing. 
+
+
+% RDD可以是(key, value)（像数据结构中的map）这样的格式，为了下一步的处理，将FASTQ R1 RDD处理为(R1 cell barcode, R1 read name + R1 UMI + R1第四行 + R2 xxx )这样的格式
 % Note that for paired-end reads, (ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.???)
 
 \iffalse
 We override FASTQ hadoop loading api~(\url{https://github.com/HadoopGenomics}).
 Large FASTQ files can be loaded in each node's memory parallel.
 So scSpark's loading speed doesn't limit by single node disk access speed.
-In this step, scSpark splits barcode and UMI when scSpark load FASTQ file to FASTQ RDD.
+In this step, scSpark splits cell barcode and UMI when scSpark load FASTQ file to FASTQ RDD.
 ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.
 \fi
 
 % After that, from the FASTQ R1 RDD, we calculated the number of occurrences for each barcode and consider the most frequent barcodes as high confidence cell barcodes.
 % This whitelist of barcodes is saved as an RDD object. 
-After that, we achieved whitelist RDD from FASTQ R1 RDD by using topN algorithm in FASTQ R1's cell barcode~\cite{guo2018bioinformatics} and user can easily set the threshold.
 % By using the reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
 % After that, we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster.
-Then scSpark can easily use whitelist RDD to filter cached FASTQ R1 RDD and generate extracted FASTQ R1 RDD.
 % In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
 % It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
-The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
-
 % (the whitelist of barcodes is obtained by thresholding the number of occurrences)
 
 
