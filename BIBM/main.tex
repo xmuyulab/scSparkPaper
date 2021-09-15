@@ -366,7 +366,7 @@ Under hgmm-10k-v3 dataset, we used scSpark and UMI-tools to get gene express mat
 	\caption{Comparison of processing time (seconds) of four pipelines.}\label{tab1}
 	\begin{tabular}{l | l | l | l }
 		\hline
-		 & pbmc\_human & pbmc\_rat & pbmc\_monkey \\ 
+		 & PBMC\_human & PBMC\_rat & PBMC\_monkey \\ 
 		\hline
 		UMI-tools & 7284 & 7259 & 7809 \\
 		CellRanger & 2225 & 1999 & 1891 \\
@@ -380,8 +380,8 @@ We first evaluated the total time comsumption for different pipelines processing
 For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of the workstation. 
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
-We recorded the processing time for three individual modules of the pipeline, i.e., barcode extraction, alignment, and counting, to have a more detailed understanding of the performance gain. 
-As scSpark is built on UMI-tools, the breakdown comparison is only between UNI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. 
+We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
+As scSpark is built based on UMI-tools, the breakdown comparison is only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig4}). It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold  faster than UMI\-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark. This result reflects that distributed reading of FASTQ reads from disk and totally elimination of re-writing extracted FASTQ reads back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
 \iffalse
 To illustrate the main source of the significant improvement brought by scSpark, we also compared the efficiency of three individual steps of the pipeline between scSpark and UMI-tools. 
@@ -394,10 +394,10 @@ To illustrate the main source of the significant improvement brought by scSpark,
 	\caption{Comparison of UMI\-tools and scSpark's first step.} \label{fig4}
 \end{figure*}
 
-As shown in Fig.~\ref{fig4}, scSpark achieved significantly shorter processing time in all three steps. 
-For barcode extraction and quality control, scSpark achieved approximate 50x-fold faster than UMI\-tools.
-For sequence alignment, scSpark's get approximate 3x-fold faster than UMI-tools mostly due to reduce disk access.
-For read count, due to each cell record's number imbalance, scSpark's speedup rate isn't stable.
+%As shown in Fig.~\ref{fig4}, scSpark achieved significantly shorter processing time in all three steps. 
+%For barcode extraction and quality control, scSpark achieved approximate 50x-fold faster than UMI\-tools.
+%For sequence alignment, scSpark's get approximate 3x-fold faster than UMI-tools mostly due to reduce disk access.
+%For read count, due to each cell record's number imbalance, scSpark's speedup rate isn't stable.
 \iffalse
 After that we recorded each step's process time to find the reason of scSpark's speed improvement.
 As table~\ref{fig4} shown, scSpark is much faster than the UMI-tools in any single step.
