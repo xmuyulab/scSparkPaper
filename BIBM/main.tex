@@ -248,10 +248,12 @@ The last step in sequence quality control was using join function again to combi
 	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
 \end{figure}
 
-In traditional pipelines that are not designed for in-memory computing, the sequence aligner loads FASTQ files from harddisks. 
-Disk IO is time consuming especially for large files. 
+Intensive disk access consumes large part of process time in align step.
+In traditional pipelines, they are not designed for in-memory computing, the sequence aligner loads FASTQ files from harddisks. 
 Similar to CellRanger, UMI-tools, and STARsolo, we use STAR as the aligner in scSpark. 
-We encapsulated the STAR aligner as a shared object, and re-designed the interface for STAR with Java Native Interface such the aligner loads reads from our FASTQ RDD, and outputs alignment results to a SAM RDD object (Fig.~\ref{fig2}). 
+We encapsulated the STAR aligner as a shared object.
+Furthermore we re-designed the interface for STAR's load FASTQ files and write SAM files way with Java Native Interface (JNI).
+As Fig.~\ref{fig2} shown, we directly transfers FASTQ RDD data to STAR and transfers STAR's result to SAM RDD without any disk access. 
 In this way scSpark avoids the heavy burden on disk IO for reading FASTQ files and writing SAM files. 
 
 \iffalse
@@ -265,9 +267,9 @@ The STAR aligner was encapsulated as a shared object and invoked the shared obje
 
 
 % Spark有repartition函数可以直接进行分区，然后我们比如4000000个read(FASTQ R2 RDD)，4个node会根据node情况分成4个区，每个区1000000个reads(FASTQ R2 RDD)
-To balance the data processing tasks among different computing nodes, we repartitioned the FASTQ R2 RDD (how???) before sending reads to STAR. 
+Furthermore, to balance the data processing tasks among different computing nodes, we repartitioned the FASTQ R2 RDD before transfer data to STAR. 
 % 可以改成随着单台机器的内存越来越大吗？
-In addition, for high-performance workstations with a large memory (how large?), it is possible to run multiple STAR instances in one node to further speed up the alignment process. 
+In addition, for high-performance workstations with a increasing memory, it is possible to run multiple STAR instances in one node to further speed up the alignment process. 
 
 \iffalse
 To overcome imbalance problem of each node's data volume, we repartitioned the extracted FASTQ R2 RDD before transfer FASTQ RDD to STAR.
