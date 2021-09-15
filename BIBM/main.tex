@@ -196,13 +196,17 @@ After that, scSpark processed STAR's program on each node in the cluster.
 In the end, scSpark grouped each cell's record and distributed conut the result.
 \fi
 
-\subsection{FASTQ data loader and barcode extraction}
-
-Our FASTQ data loader is adapted from Hadoop-BAMA\cite{hadoopBAM}, a Java library for manipulation of NGS data in the Hadoop distributed computing framework. 
-During data loading, scSpark extracts cell barcodes from reads, distributes reads to different nodes according to the extracted barcodes, and writes these reads to FASTQ RDD objects, all in a distributed manner. 
+\subsection{FASTQ data loader, barcode extraction and Sequence quality control using Spark}
+\begin{figure}
+	\includegraphics[width=0.45\textwidth]{figure1.png}
+	\caption{An overview of sequence quality control module in scSpark.} \label{fig1}
+\end{figure}
+As Fig.~\ref{fig1} shown, to overcome inefficiency of tradition pipeline's intensity I/O, scSpark used Spark as FASTQ file data loader.
+ScSpark's FASTQ data loader based on Hadoop-BAM\cite{hadoopBAM}, can easily transfer FASTQ reads to FASTQ RDDs. 
+During loading data, scSpark extracts cell barcodes from reads, and transfer these reads to FASTQ RDD in key-value structure, all in a distributed manner. 
 As multiple node computers read FASTQ files in parallel, the data loading speed is not limited by the access speed of a harddisk. 
 % RDD可以是(key, value)（像数据结构中的map）这样的格式，为了下一步的处理，将FASTQ R1 RDD处理为(R1 cell barcode, R1 read name + R1 UMI + R1第四行)这样的格式
-Note that for paired-end reads, (ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.???)
+% Note that for paired-end reads, (ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.???)
 
 \iffalse
 We override FASTQ hadoop loading api~(\url{https://github.com/HadoopGenomics}).
@@ -212,23 +216,17 @@ In this step, scSpark splits barcode and UMI when scSpark load FASTQ file to FAS
 ScSpark splits FASTQ R1's sequence to two part, uses barcode as RDD's key and uses others information as RDD's value.
 \fi
 
-
-\subsection{Sequence quality control using Spark}
-\begin{figure}
-	\includegraphics[width=0.45\textwidth]{figure1.png}
-	\caption{An overview of sequence quality control module in scSpark.} \label{fig1}
-\end{figure}
-
-Fig.~\ref{fig1} shows the workflow for sequence QC in scSpark, which consists of two components. 
-First, from the FASTQ R1 RDD, we calculated the number of occurrences for each barcode and consider the most frequent barcodes as high confidence cell barcodes. This whitelist of barcodes is saved as an RDD object. 
-By using the reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
-After that, we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster.
-Then scSpark can easily uses whitelist RDD to filter cached FASTQ R1 RDD by using Spark's join function to generate extracted FASTQ R1 RDD.
-In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
-It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
+% After that, from the FASTQ R1 RDD, we calculated the number of occurrences for each barcode and consider the most frequent barcodes as high confidence cell barcodes.
+% This whitelist of barcodes is saved as an RDD object. 
+After that, we achieved whitelist RDD from FASTQ R1 RDD by using topN algorithm in FASTQ R1's cell barcode~\cite{guo2018bioinformatics} and user can easily set the threshold.
+% By using the reduceByKey function of Spark, each cell barcode can be counted in parallel in each split of FASTQ R1 RDD. The counts of the cell barcodes from different nodes are merged. 
+% After that, we can use the result to generate whitelist RDD by Spark's sort and take function, both of which can parallelly compute in the cluster.
+Then scSpark can easily use whitelist RDD to filter cached FASTQ R1 RDD and generate extracted FASTQ R1 RDD.
+% In the time to filter FASTQ R2 RDD, scSpark uses same strategies again. 
+% It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line index.
 The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
 
-(the whitelist of barcodes is obtained by thresholding the number of occurrences)
+% (the whitelist of barcodes is obtained by thresholding the number of occurrences)
 
 
 \iffalse
@@ -243,7 +241,7 @@ It uses extracted FASTQ R1 RDD to filter FASTQ R2 RDD when they have same line i
 The last step in sequence quality control was using join function again to combine filtered FASTQ R1 RDD and FASTQ R2 RDD with the same index. 
 \fi
 
-\subsection{Minimize disk access in sequence alignment}
+\subsection{Aligner}
 \begin{figure}
 \centering
 	\includegraphics[width=0.35\textwidth]{figure2.png}
