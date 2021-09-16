@@ -289,19 +289,29 @@ Here, We used Java Native Interface again to transfer STAR results and directly 
 \fi
 
 
-\subsection{Count with multi-node}
+\subsection{Transcript quantification}
 \begin{figure}
 \centering
 	\includegraphics[width=0.45\textwidth]{figure3.png}
 	\caption{An overview of Spark version count.} \label{fig3}
 \end{figure}
 
-The gene transfer format (GTF) files contains gene structure information and are used for counting gene expressions of cells.  
-In scSpark, we implemented a multi-node in-memory counting approach. 
-First, the GTF files are loaded to memory as GTF RDD objects. 
-% 修改成 After that scSpark grouped SAM RDD and GTF RDD by their record's chromosome information.
-(After that scSpark grouped SAM RDD and GTF RDD according to their cell name. ???)
-Then we used the Spark flatMap function to compute the read count for each cell in parallel. 
+% ref: The execution engine of our GPF is designed in such manner that it builds the dependencies among processes according to the references among different resources.
+% ref: The algorithm 1 presents a pseudo-code of the DAG analysis.
+% ref: For example, when the output of Process A uses the same ref- erence as the input of Process B, B is dependent on A.
+% ref: If Process is treated as a node and the dependency is as a directed edge from one node to another, the entire pipeline can be transformed into a DAG.
+% ref: The engine then performs a topology sort on the DAG to generate a proper execution order.
+% ref: It should be noted that the DAG may not be a connected graph.
+% ref: Thus, it is necessary to iterate through the topology until all processes have been executed.
+The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~(\url{https://asia.ensembl.org/info/website/upload/gff.html}) file, using GTF to find gene's cell name, qualitfy each gene's quantity.
+Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
+
+After GTF RDD generated, as Fig.~\ref{fig3} shown, scSpark uses \textit{map} to set feature as SAM RDD and GTF RDD's key.
+ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key and conjunction SAM RDD and GTF RDD when they have same key.
+After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
+
+Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
+In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis.
 \iffalse
 As shown in Fig~\ref{fig3}, to take advantage of multi-node's compute capability, we used a new way to implement the count step. 
 Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract them as GTF RDD. 
