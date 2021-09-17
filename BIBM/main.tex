@@ -108,11 +108,11 @@ Recently, big data frameworks such as Apache Hadoop (\url{https://hadoop.apache.
 SparkBWA~\cite{Abun2016SparkBWA} exploits the capabilities of Spark to boost the performance of one of the most widely adopted aligner for NGS data, the Burrows-Wheeler Aligner (BWA). 
 GPF~\cite{Li2018Highperformance} is a fast in-memory computing framework implemented based on Spark for implementing NGS data processing pipelines in a cloud-computing environment. 
 Following the success of cloud-based implementation of NGS data processing pipelines, Falco~\cite{Yang2017Falco} concatenates the read aligner and transcript quantification software tools using Spark for scRNA-seq data preprocessing.
-Although Falco improves the performance of scRNA-seq data processing when a distributed computing environment is available, it doesn't support unique molecular identifier (UMI) barcode processing. Hence, it is incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq. In addition, it doesn't leverage the in-memory computing capability of Spark to reduce the disk read/write operations of intermediate software processing steps for further performance speedup.  
+Although Falco improves the performance of scRNA-seq data processing when a distributed computing environment is available, it doesn't support UMI barcode processing. Hence, it is incompatible with the high-throughput scRNA-seq protocols such as 10X Genomics, Drop-seq and Microwell-seq. In addition, it doesn't leverage the in-memory computing capability of Spark to reduce the disk read/write operations of intermediate software processing steps for further performance speedup.  
 
-Herein, we present scSpark, a scRNA-seq data processing pipeline using the Spark framework for high performance data processing in cloud computing environment. 
-To meet the computational demand from processing large volume of scRNA-seq data, 
-we developed scSpark, a high-performance, scalable, in-memory scRNA-seq data processing pipeline to support large-scale scRNA-seq data processing. More specifically, 
+% Herein, we present scSpark, a scRNA-seq data processing pipeline using the Spark framework for high performance data processing in cloud computing environment. 
+To meet the computational demand from processing large volume of scRNA-seq data,
+scSpark, a high-performance, scalable, in-memory scRNA-seq data processing pipeline to support large-scale scRNA-seq data processing. More specifically, 
 by implementing and integrating multiple bioinformatic processing steps of a standard scRNA-seq processing pipeline with the in-memory computing framework of Spark, scSpark eliminates the need for laborious disk read/write operations associated with traditional bioinformatics tools.
 As a result, scSpark is able to improve the scRNAseq data processing speed by more than ten-folds compared to other state-of-the-art software tools under the same CPU core consumption. In addition, by leveraging the parallel computing capability of Spark engine, scSpark further enables users to distribute their scRNA-seq data processing workloads to multiple computational nodes, thus dramatically increases their processing throughput of scRNA-seq data for large-scale studies. 
 ScSpark is freely available: \url{https://github.com/xmuyulab/spark-scRNASeq-Analysis.git}.
@@ -140,7 +140,7 @@ Finally, the reads are assigned to genes and count matrices for UMIs are generat
 %Previous baseline studies have shown that STAR is one of the most reliable reference genomic aligner for RNA-Seq analysis~\cite{Baruzzo2017SimulationbasedCB}. 
 
 CellRanger performs best under large data sets among existing tools~\cite{Gao2020Comparison}.
-In addition, UMI-tools (\url{https://github.com/CGATOxford/UMI-tools}) is an open source tool with an impressively clear process. And it had relatively higher trascript quantification accuracy compared with other tools in a previous evalution~\cite{Gao2020Comparison}. 
+In addition, UMI-tools is an open source tool with an impressively clear process. And it had relatively higher trascript quantification accuracy compared with other tools in a previous evalution~\cite{Gao2020Comparison}. 
 Furthermore, STARsolo~\cite{Blibaum2019STARsolo} has improved the parallelism of sequence mapping and counting procedures, and achieved good performance on a single machine.
 Great improvement has been achieved recently for the development of scRNA-seq data processing tools. However, all the avaliable scRNA-seq data processing tools can only run on a single machine with limited running speed, and cannot be extended to multiple nodes.
 
@@ -207,7 +207,7 @@ In the end, scSpark grouped each cell's record and distributed conut the result.
 \fi
 
 To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used.
-First, we loaded the scRNA-seq reads in FASTQ format~(\url{http://maq.sourceforge.net/FASTQ.shtml}) into RDD using Hadoop-BAM~\cite{hadoopBAM}.
+First, we loaded the scRNA-seq reads in FASTQ format~\cite{cock2010sanger} into RDD using Hadoop-BAM~\cite{hadoopBAM}.
 During the data loading process, scSpark also extracts cell barcodes from the first read in a read-pair, which are then used as the key to index both reads from the read-pair.
 Once the RDD is constructed, we used the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the white-list~\cite{guo2018bioinformatics}, which were used to select valid reads for further processing. 
 
@@ -256,7 +256,7 @@ The last step in sequence quality control was using join function again to combi
 % ref: The final alignment results are stored in multiple SAM files.
 
 Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark.
-However STAR's intensive disk access including loading temporary result FASTQ format files and writing temporary result Sequence Alignment/Map (SAM) format~(\url{https://samtools.github.io/hts-specs/SAMv1.pdf}) files consumes large part of process time in align step.
+However STAR's intensive disk access including loading temporary result FASTQ format files and writing temporary result Sequence Alignment/Map (SAM) format~\cite{li2009sequence} files consumes large part of process time in align step.
 % In traditional pipelines, they are not designed for in-memory computing, the sequence aligner loads FASTQ files from harddisks and writes temp result SAM files to harddisks. 
 % ref: Hadoop-BAM solves the issues related to BAM splitting, presenting a convenient API for implementing map and reduce functions for Hadoop. 
 ScSpark solves STAR's redundancy disk access.
@@ -308,7 +308,7 @@ Here, We used Java Native Interface again to transfer STAR results and directly 
 % ref: The engine then performs a topology sort on the DAG to generate a proper execution order.
 % ref: It should be noted that the DAG may not be a connected graph.
 % ref: Thus, it is necessary to iterate through the topology until all processes have been executed.
-The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~(\url{https://asia.ensembl.org/info/website/upload/gff.html}) file, using GTF to find gene's cell name, qualitfy each gene's quantity.
+The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
 Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
 
 After GTF RDD generated, as Fig.~\ref{fig3} shown, scSpark uses \textit{map} to set feature as SAM RDD and GTF RDD's key.
@@ -328,11 +328,15 @@ ScSpark breaks the limitation of one node's computing and achieved large scalabi
 
 \subsection{Experiment design}
 We used Apache Spark version 2.1.0 as scSpark's in-memory computing environment.
-Three scRNA-seq datasets~(\url{https://support.10xgenomics.com/}) containing approximately 10,000 peripheral blood mononuclear cells (PBMCs) from three different species, namely human, rat and monkey, generated by 10X Genomics platform were used in our experiments. In total, there are 640 million, 289 million and 262 million reads respectively in the raw data of the PBMC\_human dataset, the PBMC\_rat dataset and the PBMC\_monkey dataset.
-We evaluated the performance of scSpark with three state\-of\-the\-art pipelines including UMI-tools, CellRanger and STARsolo in terms of the efficiency, scalability and biological analysis accuracy.
+Three scRNA-seq datasets containing approximately 10,000 peripheral blood mononuclear cells (PBMCs) from three different species, namely human, rat and monkey, generated by 10X Genomics platform were used in our experiments.
+In total, there are approximate 640 million, 289 million and 262 million reads respectively in the raw data of the PBMC\_human dataset, the PBMC\_rat dataset and the PBMC\_monkey dataset.
+% We evaluated the performance of scSpark with three state\-of\-the\-art pipelines including UMI-tools, CellRanger and STARsolo in terms of the efficiency, scalability and biological analysis accuracy.
 
-To identify whether scSpark can get better performance than three tradition pipelines, we tested 
-tested the three pipelines on a workstation with 64 CPU cores, and record the time spent for each processing step when the program is assigned with different number of cores. 
+% ref: To identify whether scale-out beyond 2048 cores is feasible, we systematically identified the potential performance bottlenecks of our GPF.
+To identify whether scSpark get better performance than three state\-of\-the\-art pipelines in same CPU cores number condition,
+we compared scSpark's performance on a cluster with 64 (16*4) CPU cores with three pipelines' performance on a workstation with 64 CPU cores.
+To test improvement in scSpark's performance as a result of improving each substep's performance,
+we meatured UMI-tools and scSpark each substep's process time to prove scSpark get improve in any single substep.
 \iffalse
 Limited by the number of CPU cores of single machine, we only used 64 CPU cores for these three pipelines that are not able to run on computational clusters.
 Then, we tested each step's process spend time.
@@ -340,12 +344,14 @@ Due to CellRanger isn't an open source software and STAR-solo implemented pipeli
 And scSpark refers to UMI-tools, we choose UMI-tools each step's performance as scSpark's each step's performance baseline.
 \fi
 
-
-Except performance evaluate, we calculated scSpark's speed improve rate when Spark cluster CPU cores improve.
-And we used tradition pipelines' speed improve rate as baseline when pipelines' CPU cores improve from 32 to 64.
-After that, we tested scSpark's each step scalability and comapred with UMI\-tools.
-In align step, four pipelines' align step all based on STAR's program.
-So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
+Furthermore, to identify wherther scSpark's scalability is better than three tradition pipelines, 
+we meatured tradition pipelines' speedup by considering 16 CPU cores execution as a baseline and meatured scSpark's speedup by considering 128 CPU cores execution as a baseline.
+Particularly, we meatured STAR mapping's speedup by considering 2 CPU cores execution as a baseline and meatured scSpark mapping's speedup by considering 128 CPU cores execution as a baseline.
+% Except performance evaluate, we calculated scSpark's speed improve rate when Spark cluster CPU cores improve.
+% And we used tradition pipelines' speed improve rate as baseline when pipelines' CPU cores improve from 32 to 64.
+% After that, we tested scSpark's each step scalability and comapred with UMI\-tools.
+% In align step, four pipelines' align step all based on STAR's program.
+% So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
 
 ScSpark is developed based on UMI-tools. 
 And UMI-tools accuracy was fully verified. 
