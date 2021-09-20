@@ -19,7 +19,7 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{ScSpark: High-Performance scRNA-seq Data Processing with Low-Redundancy Disk Access}
+\title{scSpark: High-Performance scRNA-seq Data Processing with Low-Redundancy Disk Access}
 
 \author{\IEEEauthorblockN{Yu Liu}
 \IEEEauthorblockA{\textit{School of Informatics} \\
@@ -360,38 +360,8 @@ And then we compared two tools transcript analysis's result and cell cluster ana
 Under hgmm-10k-v3 dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation.
 
 \section{Results}
-%First, we compared each pipeline's speed in same CPU cores number.Due to scSpark refers UMI\-tools, then we compared each step's speed of scSpark with UMI\-tools.After that, we contrasted each pipleline's scalability, and contrasted each step's scalability with UMI\-tools.In the end, we verified scSpark's result by comparing with UMI\-tools's result.
 
 \subsection{Efficiency evaluation}
-
-\iffalse
-\begin{table}
-	\centering
-	\caption{previous pipeline and scSpark's performance comparisione}\label{tab1}
-	\resizebox{0.45\textwidth}{!} {
-	\begin{tabular}{l | l | l | l }
-		\hline
-		Pipeline & Dataset & Cores & Spend time(s) \\
-		\hline
-		UMI-tools & pbmc\_human & 64 cores & 7284 \\
-		CellRanger & pbmc\_human & 64 cores & 2225 \\
-		STAR-solo & pbmc\_human & 64 cores &  1987 \\
-		scSpark & pbmc\_human & 4*16 cores & 355 \\
-		\hline
-		UMI-tools & pbmc\_rat & 64 cores & 7259 \\
-		CellRanger & pbmc\_rat & 64 cores & 1999 \\
-		STAR-solo & pbmc\_rat & 64 cores &  1854 \\
-		scSpark & pbmc\_rat & 4*16 cores & 326 \\
-		\hline
-		UMI-tools & pbmc\_monkey & 64 cores & 7809 \\
-		CellRanger & pbmc\_monkey & 64 cores & 1891 \\
-		STAR-solo & pbmc\_monkey & 64 cores &  2357 \\
-		scSpark & pbmc\_monkey & 4*16 cores & 391 \\
-		\hline
-	\end{tabular}
-	}
-\end{table}
-\fi
 
 \begin{table}
 	\centering
@@ -403,13 +373,13 @@ Under hgmm-10k-v3 dataset, we used scSpark and UMI-tools to get gene express mat
 		UMI-tools & 7284 & 7259 & 7809 \\
 		CellRanger & 2225 & 1999 & 1891 \\
 		STARsolo & 1987 & 1854 & 2357 \\
-		scSpark & 355 & 326 & 391 \\
+		\textbf{scSpark} & \textbf{355} & \textbf{326} & \textbf{391} \\
 		\hline
 	\end{tabular}
 \end{table}
 
 We first evaluated the total time comsumption for different pipelines processing the same dataset with the same numbers of CPUs. 
-For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of the workstation. 
+For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of a single workstation. 
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
 We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
