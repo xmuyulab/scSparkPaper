@@ -66,18 +66,17 @@ rsyu@xmu.edu.cn}
 \maketitle
 
 \begin{abstract}
-%Single-cell RNA-seq (scRNA-seq) is increasingly used in a range of biomedical studies. Nonetheless, current RNA-seq analysis tools are not specifically designed to efficiently process scRNAseq data due to their limited scalability
-High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines integrate multiple modules to transform raw scRNA-seq data to gene expression matrices, including barcode processing, sequence quality control, genome alignment and transcript counting.
-Due to increasingly data volume of a scRNA-seq study, the speed of scRNA-seq data processing pipeline has become a major bottleneck to scRNA-seq study. 
-%  In this study, we took advantage of Apache Spark's in-memory computing and inherent scalability to develop a new Java-based scRNA-seq data processing pipeline, named scSpark. 
+
+High-throughput single-cell RNA sequencing (scRNA-seq) data processing pipelines integrate multiple modules to transform raw scRNA-seq data to gene expression matrices, including barcode processing, sequence quality control, genome alignment and transcript quantification.
+Due to the increase in data volume of a scRNA-seq study, the speed of scRNA-seq data processing pipeline has become a major bottleneck to large-scale scRNA-seq study. 
 %Here we introduce Falco, a cloud-based framework to enable paralellisation of existing RNA-seq processing pipelines using big data technologies of Apache Hadoop and Apache Spark for performing massively parallel analysis of large scale transcriptomic data. 
 In this study, we developed scSpark, a cloud-computing based scRNA-seq processing pipeline. 
 % We combined Spark and our proposed functionalities to implement sequence quality control and transcript counting. 
 %To reduce unnecessary disk access while reading FASTQ files and writing SAM files, we used the Java Native Interface (JNI) to deliver FASTQ Resilient Distributed Datasets (RDD), and retrieved genome mapping resul ts to SAM RDD. 
 %Using two public scRNA-seq data sets and two popular RNA-seq alignment/feature quantification pipelines, we show that the same processing pipeline runs 2.6 – 145.4 times faster using Falco than running on a highly optimised single node analysis.
-By leveraging Apache Spark's in-memory computing capability, scSpark significantly increases the processing speed of scRNA-seq data, and achieves 5\-20 times faster than state-of-the-art processing pipelines under the same CPU core consumption.
+By leveraging Apache Spark's in-memory computing capability, scSpark significantly improves the processing speed of scRNA-seq data, and achieves 5\-20 times faster than state-of-the-art processing pipelines under the same CPU core consumption.
 In addition, due to Spark's inherent scalability in a cloud-computing environment, scSpark can further decrease the processing time for a typical scRNAseq dataset (e.g., 640 million reads) from hours to minutes when multiple computer nodes (e.g., 16) are used.  
-Biological evaluation also confirmed that the results produced by scSpark is highly consistent with existing scRNAseq pipelines.
+Biological evaluation also confirmed that the results produced by scSpark are highly consistent with existing scRNAseq pipelines.
 \end{abstract}
 
 \begin{IEEEkeywords}
