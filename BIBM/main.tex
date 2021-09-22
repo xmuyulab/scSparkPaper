@@ -160,23 +160,24 @@ Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase
 % ref: Thus, it is necessary to iterate through the topology until all processes have been executed.
 First, we used the \textit{textFile} function to load gene transfer format (GTF) file in memory as GTF RDDs (Fig.~\ref{fig3}). 
 Then all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing, and the gene name could be assigned to each aligned read using \textit{join} function.
-The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
-Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
+Finally, scSpark reimplemented the directional algorithm designed by UMI-tools for transcript quantification using \textit{flatMap}, followed by writing the final expression matrix to the disk for further downstream analysis.
+%The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
+%Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
 
-After GTF RDD generated, as Fig.~\ref{fig3} shown, scSpark uses \textit{map} to set feature as SAM RDD and GTF RDD's key.
-ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key and conjunction SAM RDD and GTF RDD when they have same key.
-After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
+%After GTF RDD generated, as Fig.~\ref{fig3} shown, scSpark uses \textit{map} to set feature as SAM RDD and GTF RDD's key.
+%ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key and conjunction SAM RDD and GTF RDD when they have same key.
+%After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
 
-Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
-In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis.
+%Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
+%In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis.
 \iffalse
 As shown in Fig~\ref{fig3}, to take advantage of multi-node's compute capability, we used a new way to implement the count step. 
 Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract them as GTF RDD. 
 After that scSpark grouped SAM RDD and GTF RDD according to their cell name. 
 Then we used flatMap function to parallelly compute each cell's read count. 
 \fi
-In the end, we collected results in all nodes, and the result files would produce the only output disk access in the whole program. 
-ScSpark breaks the limitation of one node's computing and achieved large scalability. 
+%In the end, we collected results in all nodes, and the result files would produce the only output disk access in the whole program. 
+%ScSpark breaks the limitation of one node's computing and achieved large scalability. 
 
 \subsection{Experiment design}
 We used Apache Spark version 2.1.0 as scSpark's in-memory computing environment.
