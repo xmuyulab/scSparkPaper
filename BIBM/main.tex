@@ -130,7 +130,7 @@ First, we load the scRNA-seq reads in FASTQ format~\cite{cock2010sanger} into RD
 scSpark extracts cell barcodes from the first read in a read-pair, which are then used as the key to index the UMI and transcript sequence from the read-pair.
 Once the RDD is constructed, we use the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads for further processing. 
 
-\subsection{Parallel Align}
+\subsection{Parallel genome alignment}
 \begin{figure}
 \centering
 	\includegraphics[width=0.35\textwidth]{figure2.png}
@@ -141,44 +141,8 @@ Once the RDD is constructed, we use the \textit{reduceBy} function of Spark to i
 % ref: As shown in Figure 2, Aligner splits reads in FASTQ file into N sets in smaller files (FASTQ 1, FASTQ 2, FASTQ 3 ... FASTQ N), then align them to reference genome using the alignment component BWA (which is configurable for multithreading execution).
 % ref: The final alignment results are stored in multiple SAM files.
 
-Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark.
-However STAR's intensive disk access including loading temporary result FASTQ format files and writing temporary result Sequence Alignment/Map (SAM) format~\cite{li2009sequence} files consumes large part of process time in align step.
-% In traditional pipelines, they are not designed for in-memory computing, the sequence aligner loads FASTQ files from harddisks and writes temp result SAM files to harddisks. 
-% ref: Hadoop-BAM solves the issues related to BAM splitting, presenting a convenient API for implementing map and reduce functions for Hadoop. 
-ScSpark solves STAR's redundancy disk access.
-As Fig.~\ref{fig2}, it provides a way for converting FASTQ RDD to a data format that STAR can accessible and converting STAR's result to SAM RDD by implementing Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}).
-% We encapsulated the STAR aligner as a shared object.
-% Furthermore we re-designed the interface for STAR's load FASTQ files and write SAM files way with Java Native Interface (JNI).
-% As Fig.~\ref{fig2} shown, we directly transfers FASTQ RDD data to STAR and transfers STAR's result to SAM RDD without any disk access. 
-In this way scSpark avoids the heavy burden on disk access. % for reading FASTQ files and writing SAM files.
-
-Also to balance each node's process time, we use \textit{repartition} before start align.
-Due to reads can be mapped to the reference genome independently of one another in theory, splits FASTQ RDD into N sets in smaller partitions \textit{(FASTQ 1, FASTQ 2, FASTQ 3 ... FASTQ N)} is available.
-Therefore scSpark can automatically parallel process on each node with same volume of data and directly transfer final alignment results to multiple SAM RDD partitions.
-
-\iffalse
-% Apart from Cellranger we can't know how it implements because it isn't an open source software. 
-In previous pipeline, STAR needs to load extracted FASTQ R2 file and FASTQ R1 file.
-This way will generate unneccessary disk access. 
-We chose STAR as our aligner and modified STAR's loading FASTQ way to avoid loading extracted FASTQ R2 and FASTQ R1 twice. 
-As shown in Fig~\ref{fig2}, we utilized Java Native Interface to transfer extracted FASTQ R2 RDD's data to STAR program, and then run the STAR process.
-The STAR aligner was encapsulated as a shared object and invoked the shared object as our aligner. 
-\fi
-
-
-% Spark有repartition函数可以直接进行分区，然后我们比如4000000个read(FASTQ R2 RDD)，4个node会根据node情况分成4个区，每个区1000000个reads(FASTQ R2 RDD)
-% Furthermore, to balance the data processing tasks among different computing nodes, we repartitioned the FASTQ R2 RDD before transfer data to STAR. 
-% 可以改成随着单台机器的内存越来越大吗？
-% In addition, for high-performance workstations with a increasing memory, it is possible to run multiple STAR instances in one node to further speed up the alignment process. 
-
-\iffalse
-To overcome imbalance problem of each node's data volume, we repartitioned the extracted FASTQ R2 RDD before transfer FASTQ RDD to STAR.
-Each node could run STAR parallelly with counterpoise data volume. 
-We also found if node's in-memory was enough, we could start up more than one STAR's in one node to achieve better parallel computing.
-After align, STAR's output is SAM file or BAM file that will generate more disk access waste than STAR's input.
-Here, We used Java Native Interface again to transfer STAR results and directly abstract them as SAM RDD. 
-\fi
-
+Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark. However, conventional STAR alignment procedure needs to read raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, which brings extensive disk access consuming a large amount of time.
+Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) to directly feed FASTQ RDD to STAR, and further save the results to the SAM RDD after alignment (Fig.~\ref{fig2}). Note that all these steps are performed thoroughly in an in-memory computing manner without any disk access. In addition, to balance the workloads on each node during parallel processing, we use the \textit{repartition} function before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available. 
 
 \subsection{Transcript quantification}
 \begin{figure}
