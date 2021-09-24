@@ -92,11 +92,12 @@ With the development of single-cell sequencing technologies, scRNA-seq now allow
 
 %In order to demultiplex the reads for inidividual cells after sequencing~\cite{Tian2018scPipe}, two oligonucleotide barcodes, the cell barcode (CB) and the unique molecular identifier (UMI), have been introduced in single cell sequencing~\cite{Rosenberg2018SinglecellPO,Cao2017ComprehensiveSC}.  When using the CB, different barcode sequences are assigned to each cell for transcript source retrieval after sequencing, thus greatly improving the throughput and reducing the cost of scRNA-seq~\cite{Macosko2015HighlyPG,Klein2015DropletBF}. UMIs are random oligonucleotide barcodes used in single cell sequencing to distinguish redundant transcripts generated from PCR amplification~\cite{Kivioja2012Counting,Camara2017Methods,Smith2017UMItools}. 
 
-To enable efficient bioinformatics processing of sequencing data produced from scRNA-seq studies, various scRNA-seq data processing pipelines have been developed.
+To enable efficient bioinformatics processing of sequencing data produced for scRNA-seq studies, various scRNA-seq data processing pipelines have been developed.
 A fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including unique molecular identifier (UMI) barcode~\cite{Smith2017UMItools} processing, sequence quality control (QC)~\cite{schmieder2011quality}, genome alignment~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
 %First, the barcodes are extracted from a pre-designed nucleotide site for different scRNA-seq protocols. In QC, the FASTQ reads with low quality nucleotides are filtered based on user-defined thresholds.  Subsequently, the remaining FASTQ reads are mapped to the reference genome using a splice-aware aligner, such as STAR~\cite{Dobin2013STAR} and HISAT2~\cite{Kim2015HISAT}. Finally, the reads are assigned to genes and the count matrices for UMIs are generated~\cite{Parekh2018zUMIs}. 
 Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
-CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis. It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
+CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis.
+It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
 UMI-tools is a comprehensive scRNA-seq data processing suite with the directional barcode collapse algorithm integrated that cosiderably promotes the transcript quantification accuracy.
 STARsolo is a recently developed extended pipeline based on the original genome aligner STAR to adapt the single-cell applications. 
 However, these scRNA-seq data processing pipelines lack the scalability to meet the computational demand from the large volume of scRNA-seq data from increasing numbers of single-cell studies. 
@@ -125,15 +126,21 @@ Briefly, the scRNA-seq data processing has three major steps: (i) data loading w
 Next we explain the design principle and implementation details of each step of scSpark. 
 
 \subsection{Data loading with whitelist control}
-To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used.
-First, we load each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into one RDD using Hadoop-BAM~\cite{hadoopBAM}.
+\begin{figure}
+	\centering
+		\includegraphics[width=0.35\textwidth]{figure1.pdf}
+		\caption{Data loading with whitelist control.} \label{fig1}
+	\end{figure}	
+
+To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
+First, we load each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into one RDD (FASTQ RDD) using Hadoop-BAM~\cite{hadoopBAM}.
 scSpark extracts cell barcode from the first read in a read-pair, which are then used as the key to index the UMI and transcript sequence from the read-pair.
 Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads for further processing. 
 
 \subsection{Parallel genome alignment}
 \begin{figure}
 \centering
-	\includegraphics[width=0.35\textwidth]{figure2.png}
+	\includegraphics[width=0.35\textwidth]{figure2.pdf}
 	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
 \end{figure}
 
@@ -141,13 +148,16 @@ Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to
 % ref: As shown in Figure 2, Aligner splits reads in FASTQ file into N sets in smaller files (FASTQ 1, FASTQ 2, FASTQ 3 ... FASTQ N), then align them to reference genome using the alignment component BWA (which is configurable for multithreading execution).
 % ref: The final alignment results are stored in multiple SAM files.
 
-Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark. However, conventional STAR alignment procedure needs to read raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, which brings extensive disk access consuming a large amount of time.
-Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) to directly feed FASTQ RDD to STAR, and further save the results to the SAM RDD after alignment (Fig.~\ref{fig2}). Note that all these steps are performed thoroughly in an in-memory computing manner without any disk access. In addition, to balance the workloads on each node during parallel processing, we use the \textit{repartition} function before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available. 
+Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark.
+However, conventional STAR alignment procedure needs to read raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, which brings extensive disk access consuming a large amount of time.
+Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) to directly feed FASTQ RDD to STAR, and further transfer the results to the SAM RDD after alignment (Fig.~\ref{fig2}).
+Note that all these steps are performed throughly in an in-memory computing manner without any disk access.
+In addition, to balance the workloads on each node during parallel processing, we use the \textit{repartition} function before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available. 
 
 \subsection{Transcript quantification}
 \begin{figure}
 \centering
-	\includegraphics[width=0.45\textwidth]{figure3.png}
+	\includegraphics[width=0.45\textwidth]{figure3.pdf}
 	\caption{An overview of Spark version count.} \label{fig3}
 \end{figure}
 
@@ -168,15 +178,7 @@ ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key
 After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
 
 Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
-In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis.
-\iffalse
-As shown in Fig~\ref{fig3}, to take advantage of multi-node's compute capability, we used a new way to implement the count step. 
-Except for SAM RDD that were generated in the previous step, we loaded GTF file to memory and abstract them as GTF RDD. 
-After that scSpark grouped SAM RDD and GTF RDD according to their cell name. 
-Then we used flatMap function to parallelly compute each cell's read count. 
-\fi
-In the end, we collected results in all nodes, and the result files would produce the only output disk access in the whole program. 
-ScSpark breaks the limitation of one node's computing and achieved large scalability. 
+In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis. 
 
 \subsection{Experiment design}
 We used Apache Spark version 2.1.0 as scSpark's in-memory computing environment.
@@ -189,21 +191,10 @@ To identify whether scSpark get better performance than three state\-of\-the\-ar
 we compared scSpark's performance on a cluster with 64 (16*4) CPU cores with three pipelines' performance on a workstation with 64 CPU cores.
 To test improvement in scSpark's performance as a result of improving each substep's performance,
 we meatured UMI-tools and scSpark each substep's process time to prove scSpark get improve in any single substep.
-\iffalse
-Limited by the number of CPU cores of single machine, we only used 64 CPU cores for these three pipelines that are not able to run on computational clusters.
-Then, we tested each step's process spend time.
-Due to CellRanger isn't an open source software and STAR-solo implemented pipeline in a different way.
-And scSpark refers to UMI-tools, we choose UMI-tools each step's performance as scSpark's each step's performance baseline.
-\fi
 
 Furthermore, to identify wherther scSpark's scalability is better than three tradition pipelines, 
 we meatured tradition pipelines' speedup by considering 16 CPU cores execution as a baseline and meatured scSpark's speedup by considering 128 CPU cores execution as a baseline.
 Particularly, we meatured STAR mapping's speedup by considering 2 CPU cores execution as a baseline and meatured scSpark mapping's speedup by considering 128 CPU cores execution as a baseline.
-% Except performance evaluate, we calculated scSpark's speed improve rate when Spark cluster CPU cores improve.
-% And we used tradition pipelines' speed improve rate as baseline when pipelines' CPU cores improve from 32 to 64.
-% After that, we tested scSpark's each step scalability and comapred with UMI\-tools.
-% In align step, four pipelines' align step all based on STAR's program.
-% So we tested STAR and scSpark's mapping speed to prove scSpark not only get greatly improve in same CPU cores compare with STAR, but also can get near linear improve when CPU cores increase.
 
 ScSpark is developed based on UMI-tools. 
 And UMI-tools accuracy was fully verified. 
