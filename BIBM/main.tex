@@ -159,7 +159,7 @@ Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase
 % ref: It should be noted that the DAG may not be a connected graph.
 % ref: Thus, it is necessary to iterate through the topology until all processes have been executed.
 First, we used the \textit{textFile} function to load gene transfer format (GTF) file in memory as GTF RDDs (Fig.~\ref{fig3}). 
-Then all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing, and the gene name could be assigned to each aligned read using \textit{join} function.
+Then all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing, and the gene name could be assigned to each aligned read using the \textit{join} function.
 Finally, scSpark reimplemented the directional algorithm designed by UMI-tools for transcript quantification using \textit{flatMap}, followed by writing the final expression matrix to the disk for further downstream analysis.
 %The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
 %Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
