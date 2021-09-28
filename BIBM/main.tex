@@ -125,12 +125,14 @@ The overall workflow of scSpark follows closely with that of UMI-tools.
 Briefly, the scRNA-seq data processing has three major steps: (i) data loading with whitelist control, (ii) alignment of extracted reads to a reference genome, (iii) transcript quantification.
 Next we explain the design principle and implementation details of each step of scSpark. 
 
+\iffalse
 \subsection{Data loading with whitelist control}
 \begin{figure}
 	\centering
 		\includegraphics[width=0.35\textwidth]{figure1.pdf}
 		\caption{Data loading with whitelist control.} \label{fig1}
 	\end{figure}	
+\fi
 
 To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
 First, we load each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into one RDD (FASTQ RDD) using Hadoop-BAM~\cite{hadoopBAM}.
@@ -178,8 +180,8 @@ Finally, scSpark reimplemented the directional algorithm designed by UMI-tools f
 %ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key and conjunction SAM RDD and GTF RDD when they have same key.
 %After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
 
-Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
-In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis. 
+%Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
+%In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis. 
 
 \subsection{Experiment design}
 We used Apache Spark version 2.1.0 as scSpark's in-memory computing environment.
