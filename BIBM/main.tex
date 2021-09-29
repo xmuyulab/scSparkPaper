@@ -140,11 +140,11 @@ scSpark extracts cell barcode from the first read in a read-pair, which is then 
 Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads for further processing. 
 
 \subsection{Parallel genome alignment}
-\begin{figure}
+\begin{figure*}
 \centering
-	\includegraphics[width=0.35\textwidth]{figure2.pdf}
-	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig2}
-\end{figure}
+	\includegraphics[width=0.9\textwidth]{fig2-3.pdf}
+	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig1}
+\end{figure*}
 
 % ref: Parallelized Aligner: Thanks to the nature of embarrassing parallelism in terms of partitioning input data, raw reads can be mapped to the reference genome independently of one another in theory.
 % ref: As shown in Figure 2, Aligner splits reads in FASTQ file into N sets in smaller files (FASTQ 1, FASTQ 2, FASTQ 3 ... FASTQ N), then align them to reference genome using the alignment component BWA (which is configurable for multithreading execution).
@@ -152,16 +152,16 @@ Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to
 
 Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark.
 The conventional STAR alignment procedure loads raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, requiring extensive disk access which needs a significant amount of time.
-Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) to directly feed FASTQ RDD to STAR, and further transfer the results to the SAM RDD after alignment (Fig.~\ref{fig2}).
+Here we use the Java Native Interface (JNI)~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) to directly feed FASTQ RDD to STAR, and further transfer the results to the SAM RDD after alignment (Fig.~\ref{fig1}.a).
 Note that all these steps are performed throughly in an in-memory computing manner without any disk access.
 In addition, to balance the workloads on each node during parallel processing, we use the \textit{repartition} function before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available. 
 
 \subsection{Transcript quantification}
-\begin{figure}
-\centering
-	\includegraphics[width=0.45\textwidth]{figure3.pdf}
-	\caption{An overview of Spark version count.} \label{fig3}
-\end{figure}
+% \begin{figure}
+% \centering
+% 	\includegraphics[width=0.45\textwidth]{figure3.pdf}
+% 	\caption{An overview of Spark version count.} \label{fig3}
+% \end{figure}
 
 % ref: The execution engine of our GPF is designed in such manner that it builds the dependencies among processes according to the references among different resources.
 % ref: The algorithm 1 presents a pseudo-code of the DAG analysis.
@@ -170,7 +170,7 @@ In addition, to balance the workloads on each node during parallel processing, w
 % ref: The engine then performs a topology sort on the DAG to generate a proper execution order.
 % ref: It should be noted that the DAG may not be a connected graph.
 % ref: Thus, it is necessary to iterate through the topology until all processes have been executed.
-For transcript quantification, we used the \textit{textFile} function to load gene transfer format (GTF) file in memory as GTF RDDs (Fig.~\ref{fig3}). 
+For transcript quantification, we used the \textit{textFile} function to load gene transfer format (GTF) file in memory as GTF RDDs (Fig.~\ref{fig1}.b). 
 Then all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing, and the gene name could be assigned to each aligned read using the \textit{join} function.
 Finally, scSpark reimplemented the directional algorithm designed by UMI-tools for transcript quantification using \textit{flatMap}, followed by writing the final expression matrix to the disk for further downstream analysis.
 %The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
