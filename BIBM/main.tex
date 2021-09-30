@@ -131,8 +131,8 @@ On the other hand, the functional workflow of scSpark follows closely with that 
 Briefly, our scRNA-seq data processing pipeline consists of three major steps, data loading with whitelist control, alignment of extracted reads to a reference genome, and transcript quantification. 
 %Next we explain the design principle and implementation details of each step of scSpark. 
 
-\iffalse
 \subsection{Data loading with whitelist control}
+\iffalse
 \begin{figure}
 	\centering
 		\includegraphics[width=0.35\textwidth]{figure1.pdf}
@@ -156,13 +156,14 @@ Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to
 % ref: As shown in Figure 2, Aligner splits reads in FASTQ file into N sets in smaller files (FASTQ 1, FASTQ 2, FASTQ 3 ... FASTQ N), then align them to reference genome using the alignment component BWA (which is configurable for multithreading execution).
 % ref: The final alignment results are stored in multiple SAM files.
 
-Similar to CellRanger, UMI-tools and STARsolo, we use STAR as the aligner in scSpark.
+As in CellRanger, UMI-tools and STARsolo, we also adopt STAR as the aligner in scSpark.
 The conventional STAR alignment procedure loads raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, requiring extensive disk access which consumes a significant amount of time.
-Here we use the Java Native Interface (JNI) 
+Instead, in scSpark, we use the Java Native Interface (JNI) 
 %~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) 
-to directly feed FASTQ RDD to STAR, and further transfer the results to the SAM RDD after alignment (Fig.~\ref{fig1}.a).
-Note that all these steps are performed in an in-memory computing manner without any disk access.
-In addition, to balance the workloads on each node during parallel processing, we use the \textit{repartition} function before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster. 
+to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}.a). 
+In such way, the alignment process is performed in an in-memory computing manner without any disk access. 
+
+To balance the workloads across different nodes for parallel processing, we use the Spark function \textit{repartition} before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster. After data loading and partitioning, the STAR alignment is performed in parallel on all computational nodes, resulting in a SAM RDD which is used as input to the next module. 
 
 \subsection{Transcript quantification}
 % \begin{figure}
