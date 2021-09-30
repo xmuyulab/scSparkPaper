@@ -256,14 +256,12 @@ To illustrate the main source of the significant improvement brought by scSpark,
 \fi
 
 \begin{figure*}
-	\includegraphics[width=0.8\textwidth]{Fig4.pdf}
+	\centering
+	\includegraphics[width=0.9\textwidth]{fig4.pdf}
 	\caption{Comparison of UMI\-tools and scSpark's first step.} \label{fig4}
 \end{figure*}
 
-%As shown in Fig.~\ref{fig4}, scSpark achieved significantly shorter processing time in all three steps. 
-%For barcode extraction and quality control, scSpark achieved approximate 50x-fold faster than UMI\-tools.
-%For sequence alignment, scSpark's get approximate 3x-fold faster than UMI-tools mostly due to reduce disk access.
-%For read count, due to each cell record's number imbalance, scSpark's speedup rate isn't stable.
+
 \iffalse
 After that we recorded each step's process time to find the reason of scSpark's speed improvement.
 As table~\ref{fig4} shown, scSpark is much faster than the UMI-tools in any single step.
@@ -282,10 +280,11 @@ This way also gets great improve compare with UMI-tools.
 
 \subsection{Evaluation of scalability} 
 Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala out to improve process speed.
-\begin{figure*}
-	\includegraphics[width=0.8\textwidth]{fig5.pdf}
-	\caption{An overview of tradition pipelines' speedup.} \label{fig5}
-\end{figure*}
+\begin{figure}
+	\centering
+	\includegraphics[width=0.45\textwidth]{fig5.pdf}
+	\caption{An overview of pipelines' speedup.} \label{fig5}
+\end{figure}
 Due to the limited of single workstation CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
 And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 16 (1*16) CPU cores to 96 (6*16) CPU cores.
 
@@ -296,15 +295,11 @@ When CPU cores number increased from 16 to 32, STAR-solo achieved approximate av
 When CPU cores number increased from 32 to 48, STAR-solo's speedup was average 30\% and Cellranger speedup was converage.
 When CPU cores number increased from 48 to 60, STAR-solo's speedup was average xxx\%.
 
-\begin{figure}
-	\includegraphics[width=0.45\textwidth]{fig6.pdf}
-	\caption{scSpark's speedup.} \label{fig6}
-\end{figure}
-As shown in Fig~\ref{fig6}, we found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+We found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
 
-Due to UMI\-tools' processes on single thread except align step, this pipelines' scalability most come from align step.
 % scSpark不同核心数不同步骤的表现
+\iffalse
 \begin{table}
 	\centering
 	\caption{STAR's mapping speed}\label{tab3}
@@ -319,13 +314,14 @@ Due to UMI\-tools' processes on single thread except align step, this pipelines'
 		\hline
 	\end{tabular} }
 \end{table}
-As shown in Table~\ref{tab3}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
-STAR's speedup rate not only decrease when CPU cores number increase but also have a bottleneck when CPU cores number increase from 32 to 64.
+\fi
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{fig7.pdf}
 	\caption{scSpark's mapping speedup.} \label{fig7}
 \end{figure}
-As Fig~\ref{fig7} shown, we found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
+As shown in Table~\ref{fig7}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
+STAR's speedup rate not only decrease when CPU cores number increase but also have a bottleneck when CPU cores number increase from 32 to 64.
+We found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
 ScSpark enable distributed process align step per node across Spark cluster, so it can get nearly linear parallel efficiency.
 So scSpark's align step is more scalability than tradition pipelines' aligner. 
 
