@@ -286,15 +286,15 @@ Contrast with tradition pipelines, scSpark not only can perform well in same CPU
 	\includegraphics[width=0.8\textwidth]{fig5.pdf}
 	\caption{An overview of tradition pipelines' speedup.} \label{fig5}
 \end{figure*}
-Due to the limited of single machine CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
-And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 128 (8*16) CPU cores to 256 (16*16) CPU cores.
-As shown in Fig~\ref{fig5}, we found that UMI\-tools' speedup is poor when CPU cores number increase.
-Except align step, UMI-tools processes on single thread which causes it can't take advantage of CPU cores number increase.
-So UMI\-tools' scalability is weak.
-STAR-solo and Cellranger shows poorer scalability when CPU cores number increase.
+Due to the limited of single workstation CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
+And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 16 (1*16) CPU cores to 96 (6*16) CPU cores.
+
+We found that UMI\-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
+Although STAR can provides scalability on align step, the whole UMI\-tools pipeline's scalability is weak.
+STAR-solo and Cellranger shows scalability when CPU cores number increase but will converage quickly.
 When CPU cores number increased from 16 to 32, STAR-solo achieved approximate average 40\% speedup and Cellranger achieved approximate 10\% speedup.
-When CPU cores number increased from 32 to 64, STAR-solo's speedup was average 20\% and Cellranger speedup was average 4.6\%.
-Both pipelines speedup rate will decrease when CPU cores increase.
+When CPU cores number increased from 32 to 48, STAR-solo's speedup was average 30\% and Cellranger speedup was converage.
+When CPU cores number increased from 48 to 60, STAR-solo's speedup was average xxx\%.
 
 \begin{figure}
 	\includegraphics[width=0.45\textwidth]{fig6.pdf}
