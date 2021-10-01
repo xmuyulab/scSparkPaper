@@ -206,10 +206,10 @@ In all the experiments, we run all the four pipelines with exactly the same cell
 % We evaluated the performance of scSpark with three state\-of\-the\-art pipelines including UMI-tools, CellRanger and STARsolo in terms of the efficiency, scalability and biological analysis accuracy.
 % ref: To identify whether scale-out beyond 2048 cores is feasible, we systematically identified the potential performance bottlenecks of our GPF.
 To identify whether scSpark get better performance than three state-of-the-art pipelines in same CPU cores number condition,
-we compared scSpark's performance on a cluster with 64 (16$\times$4) CPU cores with three pipelines' performance on a workstation with 64 CPU cores.
+we compared scSpark's performance on a cluster with 64 (16$\times$4) CPU cores with the other three pipelines' performance on a workstation with 64 CPU cores.
 %In this experiment, we used \textit{runThreadN} parameter to restrict STAR and STAR-solo occupy CPU cores number and used \textit{localcores} parameter to restrict CellRanger occupy CPU cores number.
-In this experiment, the number of CPU cores used was configured using the \textit{runThreadN} parameter for STAR and STAR-solo, and using the \textit{localcores} parameter for CellRanger. 
-Except align step, UMI-tools doesn't have parameter to specify pipeline will occupy how much CPU cores, so we tested it in a 64 CPU cores workstation. 
+In this experiment, the number of CPU cores used was configured using the \textit{runThreadN} parameter for STAR and STARsolo, and the \textit{localcores} parameter for CellRanger. 
+%Except align step, UMI-tools doesn't have parameter to specify pipeline will occupy how much CPU cores, so we tested it in a 64 CPU cores workstation. 
 To test improvement in scSpark's performance as a result of improving each substep's performance,
 we meatured UMI-tools and scSpark each substep's process time to prove scSpark get improve in any single substep.
 
@@ -247,7 +247,7 @@ For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of a single workst
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
 We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
-As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig4}). It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold  faster than UMI\-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark. This result reflects that distributed reading of FASTQ reads from disk and totally removal of re-writing extracted FASTQ reads back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
+As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig4}). It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark. This result reflects that distributed reading of FASTQ reads from disk and totally removal of re-writing results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
 \iffalse
 To illustrate the main source of the significant improvement brought by scSpark, we also compared the efficiency of three individual steps of the pipeline between scSpark and UMI-tools. 
