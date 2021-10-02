@@ -285,15 +285,14 @@ Contrast with tradition pipelines, scSpark not only can perform well in same CPU
 	\includegraphics[width=0.45\textwidth]{fig5.pdf}
 	\caption{An overview of pipelines' speedup.} \label{fig5}
 \end{figure}
-Due to the limited of single workstation CPU cores, we tested three tradition pipelines' speedup from 16 CPU cores to 64 CPU cores.
-And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 16 (1*16) CPU cores to 96 (6*16) CPU cores.
+Due to the limited of single workstation CPU cores, we tested three tradition pipelines' speedup from 32 CPU cores to 64 CPU cores.
+And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 32 (2*16) CPU cores to 96 (6*16) CPU cores.
 
 We found that UMI\-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
 Although STAR can provides scalability on align step, the whole UMI\-tools pipeline's scalability is weak.
-STAR-solo and Cellranger shows scalability when CPU cores number increase but will converage quickly.
-When CPU cores number increased from 16 to 32, STAR-solo achieved approximate average 40\% speedup and Cellranger achieved approximate 10\% speedup.
-When CPU cores number increased from 32 to 48, STAR-solo's speedup was average 30\% and Cellranger speedup was converage.
-When CPU cores number increased from 48 to 60, STAR-solo's speedup was average xxx\%.
+STAR-solo shows scalability when CPU cores number increase but will converage quickly.
+Even after 48 CPU cores, STAR-solo process time will increase with CPU cores number increase. 
+And we found when CPU cores number bigger than 32, CellRanger's performance 
 
 We found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
