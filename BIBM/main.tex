@@ -285,16 +285,18 @@ Contrast with tradition pipelines, scSpark not only can perform well in same CPU
 	\includegraphics[width=0.45\textwidth]{fig5.pdf}
 	\caption{An overview of pipelines' speedup.} \label{fig5}
 \end{figure}
-Due to the limited of single workstation CPU cores, we tested three tradition pipelines' speedup from 32 CPU cores to 64 CPU cores.
-And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 32 (2*16) CPU cores to 96 (6*16) CPU cores.
-
 We found that UMI\-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
 Although STAR can provides scalability on align step, the whole UMI\-tools pipeline's scalability is weak.
-STAR-solo shows scalability when CPU cores number increase but will converage quickly.
-Even after 48 CPU cores, STAR-solo process time will increase with CPU cores number increase. 
-And we found when CPU cores number bigger than 32, CellRanger's performance 
 
-We found it can achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+Due to the limited of single workstation CPU cores, we tested STAR-solo and CellRanger's speedup from 32 CPU cores to 64 CPU cores.
+And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 32 (2$\times$16) CPU cores to 96 (6$\times$16) CPU cores.
+
+As Fig~\ref{fig5}.a shown, STAR-solo shows scalability when CPU cores number increase but will converage quickly.
+Even after 48 CPU cores, STAR-solo process time will increase with CPU cores number increase. 
+And we found when CPU cores number bigger than 32, CellRanger's performance can't take advantage of CPU cores number increase.
+
+We found scSpark can get higher scalability than tradition pipelines when CPU cores number under 64.
+Furthermore, as Fig~\ref{fig5}.b shown, scSpark achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
 
 % scSpark不同核心数不同步骤的表现
@@ -318,7 +320,7 @@ So scSpark shows more scalability than three tradition pipelines when CPU cores 
 	\includegraphics[width=0.45\textwidth]{fig7.pdf}
 	\caption{scSpark's mapping speedup.} \label{fig7}
 \end{figure}
-As shown in Table~\ref{fig7}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
+As shown in Fig~\ref{fig7}, we found in PBMC\_human and PBMC\_rat STAR can achieved nearly linear improved with CPU cores number increase, when CPU cores number below 32.
 STAR's speedup rate not only decrease when CPU cores number increase but also have a bottleneck when CPU cores number increase from 32 to 64.
 We found scSpark's mapping speed achieved about 79\% parallel efficiency when CPU cores number increase from 128 to 256.
 ScSpark enable distributed process align step per node across Spark cluster, so it can get nearly linear parallel efficiency.
