@@ -124,7 +124,7 @@ scSpark is freely available at \url{https://github.com/xmuyulab/spark-scRNASeq-A
 Apache Spark is a lightning fast, in-memory data processing engine.
 It distributes data in a file system across the cluster and process that data in parallel. 
 In Spark, an Resilient Distributed Dataset (RDD)~\cite{Zaharia2012Resilient} is a read-only collection of data items that can be divided into logical partitions and distributed over a cluster of nodes for parallel computing. 
-By using RDDs, Apache Spark keeps things in memory and allows to cache data in memory, hence reduces time for disk I/O.
+By using RDDs, Apache Spark keeps all data in memory and allows to cache data in memory across cluster, hence reduces time for redundant disk I/O.
 %
 We developed scSpark on top of the Spark framework~\cite{zaharia2010spark} to leverage its two major features for fast scRNA-seq data processing, i.e., parallel computing and in-memory computing. 
 On the other hand, the functional workflow of scSpark follows closely with that of UMI-tools.
@@ -135,7 +135,7 @@ Briefly, our scRNA-seq data processing pipeline consists of three major steps, d
 \iffalse
 \begin{figure}
 	\centering
-		\includegraphics[width=0.35\textwidth]{figure1.pdf}
+		\includegraphics[width=0.45\textwidth]{figure1.pdf}
 		\caption{Data loading with whitelist control.} \label{fig1}
 	\end{figure}	
 \fi
@@ -143,7 +143,7 @@ Briefly, our scRNA-seq data processing pipeline consists of three major steps, d
 To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
 First, we load each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into one RDD (FASTQ RDD) using Hadoop-BAM~\cite{hadoopBAM}.
 scSpark extracts cell barcode from the first read in a read-pair, which is then used as the key to index the UMI and transcript sequence from the read-pair.
-Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads for further processing. 
+Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads from second read for further processing. 
 
 \subsection{Parallel genome alignment}
 \begin{figure*}
@@ -157,13 +157,12 @@ Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to
 % ref: The final alignment results are stored in multiple SAM files.
 
 As in CellRanger, UMI-tools and STARsolo, we also adopt STAR as the aligner in scSpark.
-The conventional STAR alignment procedure loads raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM)~\cite{li2009sequence} files, requiring extensive disk access which consumes a significant amount of time.
-Instead, in scSpark, we use the Java Native Interface (JNI) 
-%~(\url{https://docs.oracle.com/javase/8/docs/technotes/guides/jni/}) 
-to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}.a). 
-In such way, the alignment process is performed in an in-memory computing manner without any disk access. 
+The conventional STAR alignment procedure loads raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time.
+Instead, in scSpark, we use the Java Native Interface (JNI)~(\cite{kim2012benchmarking}) to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}.a). 
+In such way, the alignment process is performed in an in-memory computing manner without any disk access causes from temporyary result. 
 
-To balance the workloads across different nodes for parallel processing, we use the Spark function \textit{repartition} before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster. After data loading and partitioning, the STAR alignment is performed in parallel on all computational nodes, resulting in a SAM RDD which is used as input to the next module. 
+To balance the workloads across different nodes for parallel processing, we use the Spark function \textit{repartition} before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster.
+After data partitioning and shuffling, the STAR alignment is performed in parallel on all computational nodes, directly resulting in a SAM RDD which is used as an input to the next module.
 
 \subsection{Transcript quantification}
 % \begin{figure}
