@@ -157,9 +157,11 @@ After data partitioning and shuffling, the STAR alignment is performed in parall
 \subsection{Transcript quantification}
 For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
 After alignment, all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing. 
-The gene names are then assigned to each aligned read using the \textit{join} function. 
+
+The gene names are then assigned to each aligned read using the \textit{join} function and user defined function. 
 In scSpark, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in \textit{flatMap} function. 
-Finally, the resulting expression matrix is written to disk for further downstream analysis. 
+
+Finally, the resulting expression matrix can easily write to disk or distributed file system by using default Spark's action function for further downstream analysis. 
 
 \section{Results}
 
@@ -171,20 +173,17 @@ In total, there are approximately 640 million, 289 million and 262 million reads
 In all the experiments, we run all the four pipelines with exactly the same cell number and barcode pattern arguments.
 Pre-tests were performed to ensure sufficient memory for each pipeline.
 
-% We evaluated the performance of scSpark with three state\-of\-the\-art pipelines including UMI-tools, CellRanger and STARsolo in terms of the efficiency, scalability and biological analysis accuracy.
-% ref: To identify whether scale-out beyond 2048 cores is feasible, we systematically identified the potential performance bottlenecks of our GPF.
 To identify whether scSpark get better performance than three state-of-the-art pipelines in same CPU cores number condition,
 we compared scSpark's performance on a cluster with 64 (16$\times$4) CPU cores with the other three pipelines' performance on a workstation with 64 CPU cores.
-%In this experiment, we used \textit{runThreadN} parameter to restrict STAR and STAR-solo occupy CPU cores number and used \textit{localcores} parameter to restrict CellRanger occupy CPU cores number.
 In this experiment, the number of CPU cores used was configured using the \textit{runThreadN} parameter for STAR and STARsolo, and the \textit{localcores} parameter for CellRanger. 
-%Except align step, UMI-tools doesn't have parameter to specify pipeline will occupy how much CPU cores, so we tested it in a 64 CPU cores workstation. 
 To test improvement in scSpark's performance as a result of improving each substep's performance,
 we meatured UMI-tools and scSpark each substep's process time to prove scSpark get improve in any single substep.
 
 Furthermore, to identify whether scSpark's scalability is better than three tradition pipelines, 
-we meatured each tradition pipelines' speedup by considering 16 CPU cores execution as a baseline.
-And we used \textit{SPARK\_EXECUTOR\_CORES} parameter to restrict Spark cluster's CPU cores number, and meatured scSpark's speedup by considering 16 CPU cores execution as a baseline.
-Particularly, we meatured STAR mapping's speedup by considering 16 CPU cores execution as a baseline and meatured scSpark mapping's speedup by considering 16 CPU cores execution as a baseline.
+we meatured each tradition pipelines' speedup by considering 16 CPU cores execution as a baseline on PBMC\_human dataset.
+And we used \textit{SPARK\_EXECUTOR\_CORES} parameter to restrict Spark cluster's CPU cores number, and meatured scSpark's speedup by considering 16 CPU cores execution time as a baseline on PBMC\_human dataset.
+Particularly, we meatured STAR mapping's speedup by considering 16 CPU cores execution time as a baseline and meatured scSpark mapping's speedup by considering 16 CPU cores execution as a baseline on PBMC\_human dataset.
+Moreover we tested scSpark's speedup and mapping speed by considering 128 CPU cores execution times as a baseline on three datasets when CPU cores number between 128 and 256 condition to prove scSpark can scale-out more efficiency than three tradition pipelines.
 
 We also identified whether FASTQ data volume will influence scSpark's scalability.
 We splited PBMC\_human dataset into 80 millions, 160 millions and 320 millions reads.
