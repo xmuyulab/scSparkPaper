@@ -8,6 +8,7 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{subfigure}
 \def\UrlBreaks{\do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J
 \do\K\do\L\do\M\do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V
 \do\W\do\X\do\Y\do\Z\do\[\do\\\do\]\do\^\do\_\do\`\do\a\do\b
@@ -154,20 +155,11 @@ To balance the workloads across different nodes for parallel processing, we use 
 After data partitioning and shuffling, the STAR alignment is performed in parallel on all computational nodes, directly resulting in a SAM RDD which is used as an input to the next module.
 
 \subsection{Transcript quantification}
-For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF) file into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
+For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
 After alignment, all the SAM RDDs and GTF RDDs were grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing. 
 The gene names are then assigned to each aligned read using the \textit{join} function. 
-In scSpark, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification using \textit{flatMap}. 
-Finally, the resulting expression matrix is written to disk for further downstream analysis.
-%The transcript quantification step of scSpark is designed in three substeps including loading gene transfer format (GTF)~\cite{breese2013ngsutils} file, using GTF to find gene's cell name, qualitfy each gene's quantity.
-%Due to each GTF format's line represents one record, scSpark can easily transfer GTF format file to GTF RDD by using \textit{textFile}.
-
-%After GTF RDD generated, as Fig.~\ref{fig3} shown, scSpark uses \textit{map} to set feature as SAM RDD and GTF RDD's key.
-%ScSpark then uses \textit{groupByKey} to gather SAM RDD and GTF RDD by their key and conjunction SAM RDD and GTF RDD when they have same key.
-%After that, scSpark could get Wait Count RDD which structure is like \textit{(Feature, SAM record, GTF record)}.
-
-%Then scSpark performs a \textit{flatMap} on each feature, iterate through SAM record to matching GTF record and count in this substep's end.
-%In this step end, scSpark use \textit{saveAsTextFile} can easily get result of scSpark for further downstream analysis. 
+In scSpark, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in \textit{flatMap} function. 
+Finally, the resulting expression matrix is written to disk for further downstream analysis. 
 
 \section{Results}
 
@@ -238,16 +230,13 @@ As scSpark is built based on UMI-tools, the breakdown comparison was only betwee
 
 \subsection{Evaluation of scalability} 
 Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala out to improve process speed.
-\begin{figure}
+\begin{figure*}
 	\centering
-	\includegraphics[width=0.45\textwidth]{fig3a.pdf}
-	\caption{An overview of pipelines' speedup.} \label{fig3}
-\end{figure}
-\begin{figure}
-	\centering
-	\includegraphics[width=0.45\textwidth]{fig3b.pdf}
-	\caption{An overview of pipelines' speedup.} \label{fig4}
-\end{figure}
+	\subfigure[An overview of pipelines' speedup.]{\includegraphics[width=0.48\textwidth]{fig3a.pdf}}
+	\subfigure[An overview of scSpark's speedup.]{\includegraphics[width=0.48\textwidth]{fig3b.pdf}}
+	\caption{ pipelines' scalability }
+	\label{fig3}
+\end{figure*}
 We found that UMI\-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
 Although STAR can provides scalability on align step, the whole UMI\-tools pipeline's scalability is weak.
 
@@ -259,21 +248,22 @@ Even after 48 CPU cores, STAR-solo process time will increase with CPU cores num
 And we found when CPU cores number bigger than 32, CellRanger's performance can't take advantage of CPU cores number increase.
 
 We found scSpark can get higher scalability than tradition pipelines when CPU cores number under 64.
-Furthermore, as Fig~\ref{fig4}.b shown, scSpark achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+Furthermore, as Fig~\ref{fig3}.b shown, scSpark achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
 
-\begin{figure}
-	\includegraphics[width=0.45\textwidth]{fig4a.pdf}
-	\caption{STAR's mapping speedup contrast with scSpark's mapping speed.} \label{fig5}
-\end{figure}
-As Fig~\ref{fig5} shown, we found in align step, scSpark can get much higher mapping speed than STAR in same CPU cores number condition.
+\begin{figure*}
+	\centering
+	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig3a.pdf}}
+	\subfigure[scSpark's mapping speedup.]{\includegraphics[width=0.48\textwidth]{fig3b.pdf}}
+	\caption{ pipelines' mapping speed }
+	\label{fig4}
+\end{figure*}
+
+As Fig~\ref{fig4}.a shown, we found in align step, scSpark can get much higher mapping speed than STAR in same CPU cores number condition.
 Furthermor, we found scSpark's mapping speed can get nearly linear parallel efficiency with CPU cores number increase.
 Although STAR's mapping speed can get improve when CPU core number between 16 and 32, STAR's mapping speed improve will converage when CPU cores number bigger than 32.
-\begin{figure}
-	\includegraphics[width=0.45\textwidth]{fig4b.pdf}
-	\caption{scSpark's mapping speedup.} \label{fig6}
-\end{figure}
-And as Fig~\ref{fig6} shown, scSpark's mapping speed can get linear parallel efficiency when even CPU cores number scale out to 256.
+
+And as Fig~\ref{fig4}.b shown, scSpark's mapping speed can get linear parallel efficiency when even CPU cores number scale out to 256.
 
 \subsection{Scalability influenced by data volume}
 In experiment, we also found scSpark's performace influenced by data volume.
