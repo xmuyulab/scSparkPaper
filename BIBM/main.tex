@@ -147,9 +147,9 @@ Once the RDDs are constructed, we use the \textit{reduceBy} function of Spark to
 \end{figure*}
 
 As in CellRanger, UMI-tools and STARsolo, we also adopt STAR as the aligner in scSpark.
-The conventional STAR alignment procedure loads raw reads from FASTQ files and write alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time.
+The conventional STAR alignment procedure loads raw reads from FASTQ files and writes alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time.
 Instead, in scSpark, we use the Java Native Interface (JNI)~(\cite{kim2012benchmarking}) to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}.a). 
-In such way, the alignment process is performed in an in-memory computing manner without any disk access causes from temporyary result. 
+In such way, the alignment process is performed in an in-memory computing manner without any redundant disk access causes from temporyary result. 
 
 To balance the workloads across different nodes for parallel processing, we use the Spark function \textit{repartition} before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster.
 After data partitioning and shuffling, the STAR alignment is performed in parallel on all computational nodes, directly resulting in a SAM RDD which is used as an input to the next module.
