@@ -218,14 +218,20 @@ We first evaluated the total time comsumption for different pipelines processing
 For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of a single workstation. 
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
-We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
-As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig4}). It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark. This result reflects that distributed reading of FASTQ reads from disk and totally removal of re-writing results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
 \begin{figure*}
 	\centering
 	\includegraphics[width=0.98\textwidth]{fig2.pdf}
 	\caption{Comparison of UMI\-tools and scSpark's first step.} \label{fig2}
 \end{figure*}
+We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
+As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing.
+Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
+It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark.
+And we found if scSpark and STAR both reduce genome load time, scSpark can get more than linear improve than STAR in align step which can prove scSpark can reduce align step's mapping time by reducing disk access.
+The imporve in transcript counting step is influenced by data imbalance but its performance is more than 2-fold than UMI\-tools.
+
+This result reflects that distributed reading of FASTQ reads from disk and totally removal of re-writing results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
 \subsection{Evaluation of scalability} 
 Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala out to improve process speed.
@@ -248,6 +254,7 @@ And we found when CPU cores number bigger than 32, CellRanger's performance can'
 
 We found scSpark can get higher scalability than tradition pipelines when CPU cores number under 64.
 Furthermore, as Fig~\ref{fig3}.b shown, scSpark achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+
 So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
 
 \begin{figure*}
@@ -261,7 +268,6 @@ So scSpark shows more scalability than three tradition pipelines when CPU cores 
 As Fig~\ref{fig4}.a shown, we found in align step, scSpark can get much higher mapping speed than STAR in same CPU cores number condition.
 Furthermor, we found scSpark's mapping speed can get nearly linear parallel efficiency with CPU cores number increase.
 Although STAR's mapping speed can get improve when CPU core number between 16 and 32, STAR's mapping speed improve will converage when CPU cores number bigger than 32.
-
 And as Fig~\ref{fig4}.b shown, scSpark's mapping speed can get linear parallel efficiency when even CPU cores number scale out to 256.
 
 \subsection{Scalability influenced by data volume}
