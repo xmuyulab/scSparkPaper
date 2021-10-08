@@ -84,18 +84,18 @@ scRNA-seq data processing, Apache Spark, cloud computing
 Single cell is the fundamental unit of a living organism.
 Historically, RNA-seq has been widely used to study gene expression patterns in biological samples.
 However, the resolution of bulk RNA-seq could only reach the average level of cell populations. 
-With the development of single-cell sequencing technologies, scRNA-seq now allows transcript profiling of thousands of cells simultaneously in a single experiment, and has emerged as a powerful tool to identify and characterize cell types in complex and heterogeneous biological samples~\cite{Zhang2019ComparativeAO}.
+With the development of single-cell sequencing technologies, scRNA-seq now allows transcript profiling of tens of thousands of cells simultaneously in a single experiment, and has emerged as a powerful tool to identify and characterize cell types in complex and heterogeneous biological samples~\cite{Zhang2019ComparativeAO}.
 
-To enable efficient scRNA-seq data processing, various pipelines have been developed.
-A fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including the unique molecular identifier (UMI) barcode~\cite{Smith2017UMItools} processing, sequence quality control (QC)~\cite{schmieder2011quality}, genome alignment~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
-Among all the scRNA-seq data processing pipelines, the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
+Generally, a fully-functioned scRNA-seq data processing pipeline typically implements multiple modules including the unique molecular identifier (UMI) barcode~\cite{Smith2017UMItools} processing, sequence quality control (QC)~\cite{schmieder2011quality}, genome alignment~\cite{Dobin2013STAR,Kim2015HISAT} and transcript quantification~\cite{Parekh2018zUMIs} to convert raw scRNA-seq data into a gene expression matrix for further downstream analysis. 
+To enable efficient scRNA-seq data processing, various pipelines have been developed, among which the most influential studies probably include CellRanger~\cite{Zheng2017Massively}, UMI-tools~\cite{Smith2017UMItools}, and STARsolo~\cite{Blibaum2019STARsolo}, etc. 
 CellRanger is a highly integrated data processing software tool tailored by 10X Genomics for scRNA-seq data analysis.
-It is most suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
+It is suitable for processing large datasets on high performance workstations~\cite{Gao2020Comparison}. 
 UMI-tools is a comprehensive scRNA-seq data processing suite with the directional barcode collapse algorithm integrated that considerably promotes the transcript quantification accuracy.
-STARsolo is a recently developed pipeline extended from the genome aligner STAR to adapt to single cell applications. 
+STARsolo is a recently developed pipeline extended from the genome aligner STAR to adapt to single cell applications, so that users are enabled to align scRNA-seq reads conveniently to reference genomes using STAR without assistance of any extra tools.
 
-In the big biological data era, large amount of data can be produced in a short time with low cost. 
-The computational demand from the large volume of scRNA-seq data from increasing numbers of single cell studies is becoming tremendous and surpassed the capabilities of these traditional bioinformatics tools. 
+In the big biological data era, 
+%, large amount of data can be produced in a short time with low cost. 
+the computational demand originated from the large volume of scRNA-seq data of increasing numbers of single cell studies is becoming tremendous and surpassed the capabilities of these traditional bioinformatics tools. 
 The cloud computing environment is a distributed system with extremely scalable computation capabilities, and allows users to run applications and services on a distributed network using a virtualized system. 
 Recently, big data frameworks such as Apache Hadoop (\url{https://hadoop.apache.org}) and Apache Spark (\url{https://spark.apache.org}) have been used to speed up the data processing for next generation sequencing (NGS) data. 
 SparkBWA~\cite{Abun2016SparkBWA} exploits the capabilities of Spark to boost the performance of a most widely used NGS data aligner, the Burrows-Wheeler Aligner (BWA). 
@@ -110,11 +110,10 @@ scSpark is freely available at \url{https://github.com/xmuyulab/spark-scRNASeq-A
 
 \section{Method}
 \subsection{Overview}
-Apache Spark is a high performance, in-memory and distribute compute data processing engine for large-scale data.
-It distributes data in a file system across the cluster and process this data in parallel. 
-In Spark, an Resilient Distributed Dataset (RDD)~\cite{Zaharia2012Resilient} is a read-only collection of data items that can be divided into logical partitions and distributed over a cluster of nodes for parallel computing. 
-By using RDDs, Apache Spark keeps all data in memory and allows to cache data in memory across cluster, hence reduces time for redundant disk I/O.
-We developed scSpark on top of the Spark framework~\cite{zaharia2010spark} to leverage its two major features for fast scRNA-seq data processing, i.e., parallel computing and in-memory computing. 
+Apache Spark~\cite{zaharia2010spark} is a high performance, in-memory and distributed computation engine for large-scale data processing. 
+In Spark, Resilient Distributed Dataset (RDD)~\cite{Zaharia2012Resilient} is designed as a read-only data container that can be divided into logical partitions across a cluster of computational nodes for parallel computing. 
+By using RDDs, Apache Spark allows to cache data in memory, hence reduces time for redundant disk I/O.
+In this study, we developed scSpark based on Spark framework to leverage its two major features for ultra-fast scRNA-seq data processing, namely distributed and in-memory computing. 
 On the other hand, the functional workflow of scSpark follows closely with that of UMI-tools.
 Briefly, our scRNA-seq data processing pipeline consists of three major steps, data loading with whitelist control, alignment of extracted reads to a reference genome, and transcript quantification. 
 
