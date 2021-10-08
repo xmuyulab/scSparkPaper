@@ -228,12 +228,12 @@ Contrast with tradition pipelines, scSpark not only can perform well in same CPU
 	\label{fig3}
 \end{figure*}
 
-Due to the limited of single workstation CPU cores, we tested STAR-solo and CellRanger's speedup from 32 CPU cores to 64 CPU cores.
+Due to the limited of single workstation CPU cores, we tested STARsolo and CellRanger's speedup from 32 CPU cores to 64 CPU cores.
 And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 32 (2$\times$16) CPU cores to 64 (4$\times$16) CPU cores.
 
-As Fig~\ref{fig3}.a shown, STAR-solo's speedup can get improve under 48 CPU cores.
-But when CPU cores number bigger than 48, STAR-solo's performace even weaker than the performance in 48 CPU cores condition.
-This shows STAR-solo's scalability can get imporve when CPU cores number increase but STAR's performance can't scale-out with CPU cores number increase.
+As Fig~\ref{fig3}.a shown, STARsolo's speedup can get improve under 48 CPU cores.
+But when CPU cores number bigger than 48, STARsolo's performace even weaker than the performance in 48 CPU cores condition.
+This shows STARsolo's scalability can get imporve when CPU cores number increase but STAR's performance can't scale-out with CPU cores number increase.
 
 And we found when CPU cores number bigger than 32, CellRanger's speedup can't take advantage of CPU cores number increase.
 This shows CellRanger lacks scalability when CPU cores number bigger than 32.
