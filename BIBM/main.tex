@@ -119,10 +119,13 @@ Briefly, our scRNA-seq data processing pipeline consists of three major steps, d
 
 \subsection{Data loading with whitelist control}
 To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
-First, scSpark loads each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into two RDDs using Hadoop-BAM~\cite{hadoopBAM}.
-We cache RDD contains the first read in a read-pair which called FASTQ R1 RDD, in the same time, scSpark extracts cell barcode from FASTQ R1 RDD.
+
+First, scSpark can parallel load and preprocess each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into two RDDs by using \textit{newAPIHadoopFile} Spark function and reimplementing Hadoop-BAM~\cite{hadoopBAM}.
+
+Then we cache RDD contains the first read in a read-pair which called FASTQ R1 RDD, in the same time, scSpark extracts cell barcode from FASTQ R1 RDD.
 We use the \textit{zipWithIndex} function to index both read-pair reads and then used as the key to index the UMI and transcript sequence from the read-pair.
-Once the RDDs are constructed, we use the \textit{join} and \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads from second read called FASTQ R2 RDD for further processing. 
+
+Once these RDDs are constructed, we use the \textit{join} and \textit{reduceBy} function of Spark to identify the highest-occurrent cell barcodes in the scRNA-seq dataset with user-defined threshold to create the whitelist~\cite{guo2018bioinformatics}, which are used to select valid reads from second read called FASTQ R2 RDD for further processing. 
 
 \subsection{Parallel genome alignment}
 \begin{figure*}
@@ -140,13 +143,14 @@ To balance the workloads across different nodes for parallel processing, we use 
 After data partitioning and shuffling, the STAR alignment is performed in parallel on all computational nodes, directly resulting in a SAM RDD which is used as an input to the next module.
 
 \subsection{Transcript quantification}
-For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file which is line structure into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
-After alignment, both SAM RDDs and GTF RDDs were individually grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing by easily using the Spark function \textit{groupByKey}. 
+For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file which is line structure format into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
+After alignment, both SAM RDDs and GTF RDDs were individually grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing by easily using the Spark function \textit{groupBy}. 
 
-The gene names are then assigned to each aligned read using the \textit{join} function and user defined function. 
-In scSpark, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in \textit{flatMap} function which can parallel process each cell's result in the same time. 
+Then, we combine Grouped GTF RDD and Grouped SAM RDD when they have same chromosome by using the \textit{join} function.
+The gene names are then assigned to each aligned read by using the \textit{flatMap} function and user defined function in \textit{flatMap}. 
+Moreover, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in \textit{flatMap} function which can parallel process each cell's result in the same time. 
 
-Finally, the resulting expression matrix can easily write upstream pipeline's result to disk or distributed file system by using default Spark's action function like \textit{saveAsTextfile} for further downstream analysis. 
+Finally, the resulting expression matrix can be easily collected from each node and write to disk or distributed file system by using default Spark's action function like \textit{saveAsTextfile} for further downstream analysis. 
 
 \section{Results}
 
@@ -213,7 +217,7 @@ We also recorded the processing time for three individual modules of the pipelin
 As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing.
 Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
 It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark.
-And we found if scSpark and STAR both reduce genome load time, scSpark can get more than linear improve than STAR in align step which can prove scSpark can reduce align step's mapping time by reducing disk access.
+Moreover we found if scSpark and STAR both reduce genome load time that scSpark doesn't change STAR's tradition way, scSpark can get more than linear improve than STAR in align step which can prove scSpark can reduce align step's mapping time by reducing disk access.
 The imporve in transcript counting step is influenced by data imbalance but its performance is more than 2-fold than UMI\-tools.
 
 This result reflects that distributed processing of FASTQ reads from disk and totally removal of re-writing temporary results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
@@ -249,8 +253,8 @@ So scSpark shows more scalability than three tradition pipelines when CPU cores 
 \begin{figure*}
 	\centering
 	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig4a.pdf}}
-	\subfigure[scSpark's mapping speedup.]{\includegraphics[width=0.48\textwidth]{fig4b.pdf}}
-	\caption{ pipelines' mapping speed }
+	\subfigure[scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig4b.pdf}}
+	\caption{ pipelines' mapping speed. }
 	\label{fig4}
 \end{figure*}
 
