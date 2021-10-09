@@ -112,21 +112,20 @@ Apache Spark~\cite{zaharia2010spark} is a high performance, in-memory and distri
 In Spark, Resilient Distributed Dataset (RDD)~\cite{Zaharia2012Resilient} is designed as a read-only data container that can be divided into logical partitions across a cluster of computational nodes for parallel computing. 
 By using RDDs, Apache Spark allows to cache data in memory, hence reduces time for redundant disk I/O.
 In this study, we developed scSpark based on Spark framework to leverage its two major features for ultra-fast scRNA-seq data processing, namely distributed and in-memory computing. 
-On the other hand, the functional workflow of scSpark follows closely with that of UMI-tools.
-Briefly, our scRNA-seq data processing pipeline consists of three major steps, data loading with whitelist control, alignment of extracted reads to a reference genome, and transcript quantification. 
+Moreover, the workflow of scSpark follows closely with that of UMI-tools. Briefly, our scRNA-seq data processing pipeline consists of three major steps, data loading with whitelist control, alignment of extracted reads to a reference genome, and transcript quantification. 
 
 \subsection{Data loading with whitelist control}
-To construct RDD that contains the scRNA-seq reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
+scSpark loads scRNA-seq reads from sequencing result files simlilarly to other software tools. To construct RDD that contains reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
 
-First, scSpark can parallel load and preprocess each scRNA-seq read in FASTQ format~\cite{cock2010sanger} into two RDDs by using \textit{newAPIHadoopFile} Spark function and reimplementing Hadoop-BAM~\cite{hadoopBAM}.
+For most data yielded from high-throughtput scRNA-seq platforms, two FASTQ~\cite{cock2010sanger} files are generated to save the paired-end sequencing results where the first FASTQ file contains information of cell barcodes and UMIs, and the second one contains transcript sequences.
+First, scSpark loads scRNA-seq reads from disks in parallel into two RDDs, which are FASTQ R1 RDD for the first read and FASTQ R2 RDD for the second read respectively by using \textit{newAPIHadoopFile} Spark function and reimplementing Hadoop-BAM~\cite{hadoopBAM}.
 
-Then we cache RDDs which contains the first read in a read-pair called FASTQ R1 RDD.
-In the same time, scSpark extracts cell barcode from FASTQ R1 RDD for further using Spark to identify the highest-occurrent cell barcodes in the FASTQ R1 RDD with user-defined threshold to create the whitelist called WHITELIST RDDs~\cite{guo2018bioinformatics}.
+Subsequently, scSpark extracts cell barcodes and UMIs from FASTQ R1 RDD as a key-value structure where the key is cell barcode and the value is UMI. Then the highest-occurrent cell barcodes are identified with a user-defined threshold to create the WHITELIST RDDs~\cite{guo2018bioinformatics}, so that the unwanted reads can be discarded with \textit{join} function. \textit{zipWithIndex} function is used to index both read-pair FASTQ RDD to preserve the corresponding relationship of the cell barcode, UMI and transcript sequence.
 
-After that, we use the \textit{zipWithIndex} function to index both read-pair reads and then used as the key to index the UMI and transcript sequence from the read-pair.
-We select the FASTQ R1 RDD which cell barcode is in WHITELIST RDD by using \textit{join} function of Spark.
+%At the same time, we use the \textit{zipWithIndex} function to index both read-pair reads and then used as the key to index the UMI and transcript sequence from the read-pair.
+%We select the FASTQ R1 RDD which cell barcode is in WHITELIST RDD by using \textit{join} function of Spark.
 
-Once these FASTQ R1 RDDs are selected, we use the \textit{join} function again to select valid reads from second read called FASTQ R2 RDD when FASTQ R1 RDD's index equals with FASTQ R2 RDDs for further processing. 
+%Once these FASTQ R1 RDDs are selected, we use the \textit{join} function again to select valid reads from second read called FASTQ R2 RDD when FASTQ R1 RDD's index equals with FASTQ R2 RDDs for further processing. 
 
 \subsection{Parallel genome alignment}
 \begin{figure*}
@@ -145,14 +144,15 @@ To balance the workloads across different nodes for parallel processing, we use 
 After data partitioning and shuffling, the STAR alignment is performed in parallel on each computational nodes, directly resulting in a SAM RDD which is used as an input to the next module.
 
 \subsection{Transcript quantification}
-For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file which is line structure format into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
-After alignment, both SAM RDDs and GTF RDDs were individually grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing by easily using the Spark function \textit{groupBy}. 
+For transcript quantification, we first use the \textit{textFile} function in Spark to load the gene transfer format (GTF)~\cite{breese2013ngsutils} file which contains the gene annotation information into memory as GTF RDDs (Fig.~\ref{fig1}.b). 
+After alignment, both SAM RDDs and GTF RDDs are respectively grouped by chromosome into Grouped SAM RDDs and Grouped GTF RDDs respectively for parallel processing by the Spark function \textit{groupBy}. 
 
-Then, we combine Grouped GTF RDD and Grouped SAM RDD when they have same chromosome by using the \textit{join} function.
-The gene names are then assigned to each aligned read by using the \textit{flatMap} function and user defined function in \textit{flatMap}. 
-Moreover, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in \textit{flatMap} function which can parallel process each cell's result in the same time. 
+Then, we combine Grouped GTF RDD and Grouped SAM RDD with the same chromosome to obtain Chromosome Partition RDD by using the \textit{join} function.
+At this stage, the gene names are assigned to each read according to its alignment coordinates by a user-defined \textit{flatMap} function. 
 
-Finally, the resulting expression matrix can be easily collected from each node and write to disk or distributed file system by using default Spark's action function like \textit{saveAsTextfile} for further downstream analysis. 
+Subsequently, we reimplemented the directional algorithm designed by UMI-tools for transcript quantification in parallel. The quantification resutls are saved in Counted RDD.
+
+Finally, the resulting expression matrix are generated on each node and wrote to disk or distributed file system by using default Spark's action function like \textit{saveAsTextfile} for further downstream analysis. 
 
 \section{Results}
 
