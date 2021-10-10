@@ -80,6 +80,11 @@ scRNA-seq data processing, Apache Spark, cloud computing
 \end{IEEEkeywords}
 
 \section{Introduction}
+\begin{figure*}
+	\centering
+	\includegraphics[width=0.98\textwidth]{fig1.pdf}
+	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig1}
+\end{figure*}
 Single cell is the fundamental unit of a living organism.
 Historically, RNA-seq has been widely used to study gene expression patterns in biological samples.
 However, the resolution of bulk RNA-seq could only reach the average level of cell populations. 
@@ -123,11 +128,6 @@ First, scSpark loads scRNA-seq reads from disks in parallel into two RDDs, which
 Subsequently, scSpark extracts cell barcodes and UMIs from FASTQ R1 RDD as a key-value structure where the key is cell barcode and the value is UMI. Then the highest-occurrent cell barcodes are identified with a user-defined threshold to create the Whitelist RDDs~\cite{guo2018bioinformatics}, so that the unwanted reads can be discarded with \textit{join} function. \textit{zipWithIndex} function is used to index both read-pair FASTQ RDD to preserve the corresponding relationship of the cell barcode, UMI and transcript sequence.
 
 \subsection{Parallel genome alignment}
-\begin{figure*}
-\centering
-	\includegraphics[width=0.98\textwidth]{fig1.pdf}
-	\caption{Using JNI and RDD to integrate the STAR aligner in scSpark.} \label{fig1}
-\end{figure*}
 
 As in CellRanger, UMI-tools and STARsolo, we also adopt STAR as the aligner in scSpark.
 The conventional STAR alignment procedure loads raw reads from FASTQ files and writes alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time.
@@ -150,6 +150,15 @@ Subsequently, we reimplemented the directional algorithm designed by UMI-tools f
 Finally, the resulting expression matrix are generated on each node and wrote to disk or distributed file system by using default Spark's action function like \textit{saveAsTextfile} for further downstream analysis. 
 
 \section{Results}
+
+\begin{figure*}
+	\centering
+	\subfigure[Barcode extraction and sequence quality control.]{\includegraphics[width=0.32\textwidth]{fig2a.pdf}}
+	\subfigure[Alignment.]{\includegraphics[width=0.32\textwidth]{fig2b.pdf}}
+	\subfigure[Transcript counting.]{\includegraphics[width=0.32\textwidth]{fig2c.pdf}}
+	\caption{Comparison of UMI-tools and scSpark's each step.}
+	\label{fig2}
+\end{figure*}
 
 \subsection{Experiment design}
 The performance in processing speed of scSpark is compared with CellRanger, UMI-tools and STARsolo. 
@@ -203,19 +212,30 @@ Under PBMC\_human dataset, we used scSpark and UMI-tools to get gene express mat
 	\end{tabular}
 \end{table}
 
+\begin{figure*}
+	\centering
+	\includegraphics[width=0.72\textwidth]{fig3.pdf}
+	\caption{scalability of each pipelines}
+	\label{fig3}
+\end{figure*}
+\begin{figure*}
+	\centering
+	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.45\textwidth]{fig4a.pdf}}
+	\subfigure[scSpark's mapping speed.]{\includegraphics[width=0.45\textwidth]{fig4b.pdf}}
+	\caption{ pipelines' mapping speed. }
+	\label{fig4}
+\end{figure*}
+\begin{figure}
+	\centering
+	\includegraphics[width=0.45\textwidth]{fig5.pdf}
+	\caption{scSpark's speedup influenced by data volume.} \label{fig5}
+\end{figure}
+
 To identify whether scSpark get better performance than three state-of-the-art pipelines in same CPU cores number condition, we first evaluated the total time comsumption for different pipelines processing the same dataset with the same numbers of CPUs. 
 For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of a single workstation. 
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
 
-\begin{figure*}
-	\centering
-	\subfigure[Barcode extraction and sequence quality control.]{\includegraphics[width=0.32\textwidth]{fig2a.pdf}}
-	\subfigure[Alignment.]{\includegraphics[width=0.32\textwidth]{fig2b.pdf}}
-	\subfigure[Transcript counting.]{\includegraphics[width=0.32\textwidth]{fig2c.pdf}}
-	\caption{Comparison of UMI-tools and scSpark's each step.}
-	\label{fig2}
-\end{figure*}
 We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
 As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing.
 Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
@@ -228,12 +248,6 @@ This result reflects that distributed processing of FASTQ reads from disk and to
 \subsection{Scalability evaluation}
 
 \subsubsection{Scalability of each pipelines}
-\begin{figure*}
-	\centering
-	\includegraphics[width=0.9\textwidth]{fig3.pdf}
-	\caption{scalability of pipelines}
-	\label{fig3}
-\end{figure*}
 Contrast with traditional pipelines only can process on single workstation, scSpark can inherent process across Spark cluster.
 So we think scSpark can inherent take advantange of scalability of Spark.
 Therefore, to identified whether scSpark not only have more efficiency performance than traditional pipelines but also have more scalability with CPU cores number than traditional pipelines,
@@ -258,13 +272,6 @@ Although STAR can provides scalability on align step, the whole UMI-tools pipeli
 So scSpark has most efficiency scalability in four pipelines when CPU cores number increase.
 
 \subsubsection{Scalability of align step}
-\begin{figure*}
-	\centering
-	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig4a.pdf}}
-	\subfigure[scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig4b.pdf}}
-	\caption{ pipelines' mapping speed. }
-	\label{fig4}
-\end{figure*}
 The aligner of all four pipelines is based on STAR, and in pretest shows the scalability of UMI-tools most comes from align step.
 So we particulaly measured mapping speed of STAR and scSpark.
 
@@ -275,36 +282,35 @@ Although the mapping speed of STAR can get improve when CPU core number between 
 And as Fig~\ref{fig4}.b shown, the mapping speed of scSpark can get linear parallel efficiency even CPU cores number scale out to 256.
 This shows the scalability of scSpark is much more efficiency than STAR in align step.
 
-\subsubsection{Scalability influenced by data volume}
-In experiment, we also found scSpark's performace influenced by data volume.
-
+\subsubsection{The scalability of scSpark influenced of the volume of FASTQ data}
 \begin{figure}
-	\includegraphics[width=0.48\textwidth]{fig5.pdf}
-	\caption{scSpark's speedup influenced by data volume.} \label{fig5}
+	\centering
+	\includegraphics[width=0.45\textwidth]{fig6.pdf}
+	\caption{correlation of scSpark and UMI-tools.} \label{fig6}
 \end{figure}
-As Fig~\ref{fig5} shown, when dataset contains 80 millions reads, scSpark's speedup is much less than dataset which contains 640 millions in CPU cores number between 128 and 256 condition.
-Moreover, scSpark's speedup will converage when dataset contains 80 millions reads or 160 millions reads and CPU cores number bigger than 192.
-Contrast with small dataset, scSpark's speedup can get increase when dataset contains 320 millions reads or 640 millions reads and CPU cores number bigger than 192.
+\begin{figure*}
+	\centering
+	\includegraphics[width=0.9\textwidth]{fig7.pdf}
+	\caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig7}
+\end{figure*}
+In experiment, we also found the performance of scSpark influenced by the volume of FASTQ data.
+We think if the scalability of scSpark can improve with FASTQ
+
+As Fig~\ref{fig5} shown, when FASTQ dataset contains 80 millions reads, the speedup of scSpark is much less than FASTQ dataset which contains 640 millions in CPU cores number between 128 and 256 condition.
+Moreover, the speedup of scSpark will converage when dataset contains 80 millions reads or 160 millions reads and CPU cores number bigger than 192.
+Contrast with small dataset, the speedup of scSpark can get increase when dataset contains 320 millions reads or 640 millions reads and CPU cores number bigger than 192.
 So scSpark can scala-out more efficiency when scSpark processes larger dataset.
 
-Our scSpark doesn't reimplement STAR's genome load method in align step which lack scalability in align step may be charged with some responsibility of scSpark's scalability influenced by data volume.
-We found both scSpark and STAR lack scalability this substep because STAR's genome load method doesn't influencd by CPU cores number or input dataset volume.
-This substep's process time occupy larger part of dataset which contains less reads causes its scalability is weaker. 
+Our scSpark does not reimplement STAR's genome load method in align step which lack scalability in align step may be charged with some responsibility of scalability of scSpark scalability influenced by data volume.
+We found both scSpark and STAR lack scalability in this substep because genome load method of STAR does not influencd by CPU cores number nor input dataset volume.
+The process time of this substep occupy larger part of dataset which contains less reads causes the scalability of whole substep is weak. 
+
 \subsection{Reliability of the results produced by scSpark} 
 We further evaluated the accuracy of the expression matrices generated by scSpark.
-\begin{figure}
-	\includegraphics[width=0.48\textwidth]{fig6.pdf}
-	\caption{correlation of scSpark and UMI-tools.} \label{fig8}
-\end{figure}
-First, the total UMI count for each cell in PBMC\_human dataset produced by scSpark was highly consistent with that by UMI-tools, with a Pearson correlation of $R^{2} = 0.9998$ (Fig~\ref{fig8}), which indicates that the expression profile of single cells produced by scSpark is reliable.
+First, the total UMI count for each cell in PBMC\_human dataset produced by scSpark was highly consistent with that by UMI-tools, with a Pearson correlation of $R^{2} = 0.9998$ (Fig~\ref{fig6}), which indicates that the expression profile of single cells produced by scSpark is reliable.
 In addition, we also evaluated whether scSpark would have influence on downstream biological analysis.
-Results show that the cell embeddings in tSNE map were highly consistent between scSpark and UMI-tools (Fig~\ref{fig9}).
+Results show that the cell embeddings in tSNE map were highly consistent between scSpark and UMI-tools (Fig~\ref{fig7}).
 This further demonstrates that the expression matrices generated by scSpark are accurate and would not bring interference to various types of downstream analysis such as clustering, dimension reduction and cell type identification.
-
-\begin{figure*}
-  \includegraphics[width=\textwidth]{fig7.pdf}
-  \caption{tSNE picture based on scSpark and UMI-tools' gene expression matrix.} \label{fig9}
-\end{figure*}
 
 \section{Conclusion}
 
