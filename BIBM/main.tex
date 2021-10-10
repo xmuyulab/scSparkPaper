@@ -252,7 +252,7 @@ Do not like the speedup of STARsolo and CellRanger, the speedup of scSpark is mo
 Furthermore, as Fig~\ref{fig3}.b shown, the speedup of scSpark achieve average 50\% improve when the CPU cores number of Spark cluster increased from 128 to 256.
 This shows the scalability of scSpark not only have stable improve contrast with STARsolo and CellRanger, but also have more efficiency scalability than STARsolo and CellRanger.
 
-In pretest, we found that UMI-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
+In pretest, we found that the performance of UMI-tools can not take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
 Although STAR can provides scalability on align step, the whole UMI-tools pipeline's scalability is weak.
 
 So scSpark has most efficiency scalability in four pipelines when CPU cores number increase.
@@ -265,14 +265,17 @@ So scSpark has most efficiency scalability in four pipelines when CPU cores numb
 	\caption{ pipelines' mapping speed. }
 	\label{fig4}
 \end{figure*}
+The aligner of all four pipelines is based on STAR, and in pretest shows the scalability of UMI-tools most comes from align step.
+So we particulaly measured mapping speed of STAR and scSpark.
 
 As Fig~\ref{fig4}.a shown, we found in align step, scSpark can get much higher mapping speed than STAR in any same CPU cores number condition.
-The mapping speed's imporve of scSpark not only comes from reduce disk access which conclude in last subsection but also comes from parallel compute in each node.
-Furthermore, we found scSpark's mapping speed can get nearly linear parallel efficiency with CPU cores number increase.
-Although STAR's mapping speed can get improve when CPU core number between 16 and 32, STAR's mapping speed improve will converage when CPU cores number bigger than 32.
-And as Fig~\ref{fig4}.b shown, scSpark's mapping speed can get linear parallel efficiency even CPU cores number scale out to 256.
+This shows scSpark can take advantage of scSpark reimplement the method to storage the temporary result of pipeline in align step.
+Furthermore, we found the mapping speed of scSpark can get nearly linear parallel efficiency with CPU cores number increase.
+Although the mapping speed of STAR can get improve when CPU core number between 16 and 32, the improve of the mapping speed of STAR will converage when CPU cores number bigger than 32.
+And as Fig~\ref{fig4}.b shown, the mapping speed of scSpark can get linear parallel efficiency even CPU cores number scale out to 256.
+This shows the scalability of scSpark is much more efficiency than STAR in align step.
 
-\subsection{Scalability influenced by data volume}
+\subsubsection{Scalability influenced by data volume}
 In experiment, we also found scSpark's performace influenced by data volume.
 
 \begin{figure}
