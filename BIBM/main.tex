@@ -165,25 +165,23 @@ Three scRNA-seq datasets containing peripheral blood mononuclear cells (PBMCs) f
 In total, there are approximately 640 millions, 289 millions and 262 millions reads in the raw data of the PBMC\_human, PBMC\_rat and PBMC\_monkey datasets, respectively. 
 In all the experiments, we run all the four pipelines with exactly the same cell number and barcode pattern arguments.
 
-To identify whether scSpark get better performance than three state-of-the-art pipelines in same CPU cores number condition,
-we compared scSpark's performance on a cluster with 64 (16$\times$4) CPU cores with the other three pipelines' performance on a workstation with 64 CPU cores.
-In this experiment, the number of CPU cores used was configured using the \textit{runThreadN} parameter for STAR and STARsolo, and the \textit{localcores} parameter for CellRanger. 
-To test improvement in scSpark's performance as a result of improving each substep's performance,
-we meatured UMI-tools and scSpark each substep's process time to prove scSpark get improve in any single substep.
+Firstly, we compared scSpark's performance on a cluster with 64 (16$\times$4) CPU cores with the other three pipelines' performance on a workstation on 64 CPU cores on PBMC\_human.
+In all experiments, the number of CPU cores used was configured using the \textit{runThreadN} parameter for STAR and STARsolo, the \textit{localcores} parameter for CellRanger and the \textit{SPARK\_EXECUTOR\_CORES} parameter for scSpark. 
+To test improvement in each step performance of scSpark, we meatured process time of UMI-tools and scSpark each substep to prove scSpark get improve in any single substep on 64 CPU cores.
 
-Furthermore, to identify whether scSpark's scalability is better than three tradition pipelines, 
-we meatured each tradition pipelines' speedup by considering 16 CPU cores execution as a baseline on PBMC\_human dataset.
-And we used \textit{SPARK\_EXECUTOR\_CORES} parameter to restrict Spark cluster's CPU cores number, and meatured scSpark's speedup by considering 16 CPU cores execution time as a baseline on PBMC\_human dataset.
-Particularly, we meatured STAR mapping's speedup by considering 16 CPU cores execution time as a baseline and meatured scSpark mapping's speedup by considering 16 CPU cores execution as a baseline on PBMC\_human dataset.
-Moreover we tested scSpark's speedup and mapping speed by considering 128 CPU cores execution times as a baseline on three datasets when CPU cores number between 128 and 256 condition to prove scSpark can scale-out more efficiency than three tradition pipelines.
+Then we tested performance of each pipelines on PBMC\_human when CPU cores number is up to 64.
+Due to limit of single workstation CPU cores, we tested STARsolo and CellRanger's speedup from 32 CPU cores to 64 CPU cores.
+And due to limit of memory capacity per node, we tested scSpark's speedup in 32 (2$\times$16) CPU cores, 48 (3$\times$16) CPU cores to 64 (4$\times$16) CPU cores.
+Moreover we tested performance of scSpark on PBMC\_human when CPU cores number is between 128 and 256.
 
-We also identified whether FASTQ data volume will influence scSpark's scalability.
-We splited PBMC\_human dataset into 80 millions, 160 millions and 320 millions reads.
+Particularly, we tested the mapping speed of STAR on PBMC\_human dataset when CPU cores number is up to 64.
+Furthermore, we tested the mapping speed of scSpark on three datasets when CPU cores number is between 128 and 256.
+
+Also we splited PBMC\_human dataset into 80 millions, 160 millions and 320 millions reads.
 We processed PBMC\_human and three sub datasets on scSpark with different CPU cores number condition.
 After that we compare each dataset's performance to evaluated whether FASTQ data volume will influence scSpark's performance.
 
-ScSpark is developed based on UMI-tools. 
-And UMI-tools accuracy was fully verified. 
+Our scSpark is developed based on UMI-tools and UMI-tools accuracy was fully verified. 
 This section we used the gene expression matrix that was obtained by scSpark and UMI-tools under the same dataset to perform downstream analysis of scRNA-seq data. 
 And then we compared two tools transcript analysis's result and cell cluster analysis's result to verify the correlation between scSpark and UMI-tools. 
 Under PBMC\_human dataset, we used scSpark and UMI-tools to get gene express matrix, compared two tools' result, and computed their correlation.
@@ -205,7 +203,7 @@ Under PBMC\_human dataset, we used scSpark and UMI-tools to get gene express mat
 	\end{tabular}
 \end{table}
 
-We first evaluated the total time comsumption for different pipelines processing the same dataset with the same numbers of CPUs. 
+To identify whether scSpark get better performance than three state-of-the-art pipelines in same CPU cores number condition, we first evaluated the total time comsumption for different pipelines processing the same dataset with the same numbers of CPUs. 
 For UMI-tools, CellRanger, and STARsolo, we used all 64 cores of a single workstation. 
 For scSpark, we used a cluster of 4 computing nodes, where each node has 16 CPU cores. 
 Results show that scSpark achieves substantially higher processing speed, which is nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}). 
@@ -215,8 +213,7 @@ Results show that scSpark achieves substantially higher processing speed, which 
 	\subfigure[Barcode extraction and sequence quality control.]{\includegraphics[width=0.32\textwidth]{fig2a.pdf}}
 	\subfigure[Alignment.]{\includegraphics[width=0.32\textwidth]{fig2b.pdf}}
 	\subfigure[Transcript counting.]{\includegraphics[width=0.32\textwidth]{fig2c.pdf}}
-	% \subfigure[An overview of scSpark's speedup.]{\includegraphics[width=0.48\textwidth]{fig2d.pdf}}
-	\caption{Comparison of UMI\-tools and scSpark's each step.}
+	\caption{Comparison of UMI-tools and scSpark's each step.}
 	\label{fig2}
 \end{figure*}
 We also recorded the processing time for three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
@@ -224,38 +221,43 @@ As scSpark is built based on UMI-tools, the breakdown comparison was only betwee
 Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
 It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance promotion brought by scSpark.
 Moreover we found if scSpark and STAR both reduce genome load time that scSpark doesn't change STAR's tradition way, scSpark can get more than linear improve than STAR in align step which can prove scSpark can reduce align step's mapping time by reducing disk access.
-The imporve in transcript counting step is influenced by data imbalance but its performance is more than 2-fold than UMI\-tools.
+The imporve in transcript counting step is influenced by data imbalance but its performance is more than 2-fold than UMI-tools.
 
 This result reflects that distributed processing of FASTQ reads from disk and totally removal of re-writing temporary results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
-\subsection{Evaluation of scalability} 
-Contrast with tradition pipelines, scSpark not only can perform well in same CPU cores but also scSpark can scala-out to improve process speed.
+\subsection{Scalability evaluation}
+
+\subsubsection{Scalability of each pipelines}
 \begin{figure*}
 	\centering
-	\subfigure[An overview of tradition pipelines' speedup.]{\includegraphics[width=0.48\textwidth]{fig3a.pdf}}
-	\subfigure[An overview of scSpark's speedup.]{\includegraphics[width=0.48\textwidth]{fig3b.pdf}}
-	\caption{ pipelines' scalability }
+	\includegraphics[width=0.9\textwidth]{fig3.pdf}
+	\caption{scalability of pipelines}
 	\label{fig3}
 \end{figure*}
+Contrast with traditional pipelines only can process on single workstation, scSpark can inherent process across Spark cluster.
+So we think scSpark can inherent take advantange of scalability of Spark.
+Therefore, to identified whether scSpark not only have more efficiency performance than traditional pipelines but also have more scalability with CPU cores number than traditional pipelines,
+we computed the speedup of each tradition pipelines by considering 32 CPU cores execution times of each pipelines as a dividend and other numbers of CPU cores as divisor.
+The scalability of pipeline is stronger if the speedup is bigger.
 
-Due to the limited of single workstation CPU cores, we tested STARsolo and CellRanger's speedup from 32 CPU cores to 64 CPU cores.
-And due to the limited of memory capacity per node, we tested scSpark's speedup starting from 32 (2$\times$16) CPU cores to 64 (4$\times$16) CPU cores.
+As Fig~\ref{fig3}.a shown, the speedup of STARsolo can get improve between 32 and 48 CPU cores.
+Surprising, the performance of STARsolo in 48 CPU cores condition even more efficiency than the performance of STARsolo when CPU cores number bigger than 48.
+This shows the scalability of STARsolo can get imporve when CPU cores number below a threshold but the improve of the performance of STARsolo can not scale-out with CPU cores number when CPU cores number bigger than the threshold.
 
-As Fig~\ref{fig3}.a shown, STARsolo's speedup can get improve under 48 CPU cores.
-But when CPU cores number bigger than 48, STARsolo's performace even weaker than the performance in 48 CPU cores condition.
-This shows STARsolo's scalability can get imporve when CPU cores number increase but STAR's performance can't scale-out with CPU cores number increase.
+As for CellRanger, we found when CPU cores number bigger than 32, the speedup of CellRanger can not take advantage of CPU cores number increase.
+This shows CellRanger approximately lacks scalability when CPU cores number bigger than a threshold, in this case, the threshold is 32.
 
-And we found when CPU cores number bigger than 32, CellRanger's speedup can't take advantage of CPU cores number increase.
-This shows CellRanger lacks scalability when CPU cores number bigger than 32.
+We found the speedup of scSpark is highest when CPU cores number is below 64.
+Do not like the speedup of STARsolo and CellRanger, the speedup of scSpark is monotonically increasing with CPU cores number.
+Furthermore, as Fig~\ref{fig3}.b shown, the speedup of scSpark achieve average 50\% improve when the CPU cores number of Spark cluster increased from 128 to 256.
+This shows the scalability of scSpark not only have stable improve contrast with STARsolo and CellRanger, but also have more efficiency scalability than STARsolo and CellRanger.
 
-We found scSpark can get higher scalability than tradition pipelines when CPU cores number under 64.
-Furthermore, as Fig~\ref{fig3}.b shown, scSpark achieve average 50\% speedup when Spark's CPU cores number increased from 128 to 256.
+In pretest, we found that UMI-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
+Although STAR can provides scalability on align step, the whole UMI-tools pipeline's scalability is weak.
 
-In pretest, we found that UMI\-tools' performance can't take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
-Although STAR can provides scalability on align step, the whole UMI\-tools pipeline's scalability is weak.
+So scSpark has most efficiency scalability in four pipelines when CPU cores number increase.
 
-So scSpark shows more scalability than three tradition pipelines when CPU cores number increase.
-
+\subsubsection{Scalability of align step}
 \begin{figure*}
 	\centering
 	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.48\textwidth]{fig4a.pdf}}
