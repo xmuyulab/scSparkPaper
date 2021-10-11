@@ -237,24 +237,7 @@ These results reflect that distributed loading and processing of FASTQ reads fro
 \subsection{Scalability evaluation}
 As the explosive growth of the data volume of scRNA-seq studies, it becomes a racial requirement for software tools to take fully usage of available computational resources to promote the efficiency of large-scale data processing. Thus, we evaluated the scalability of scSpark and other pipelines to demonstrate their capabilities of using CPU cores for data processing acceleration.
 
-\subsubsection{Scalability of each pipelines}
-Contrast with traditional pipelines only can process on single workstation, scSpark can inherent process across Spark cluster.
-So we think scSpark can inherent take advantange of scalability of Spark.
-Therefore, to identified whether scSpark not only have more efficiency performance than traditional pipelines but also have more scalability with CPU cores number than traditional pipelines,
-we computed the speedup of each tradition pipelines by considering 32 CPU cores execution times of each pipelines as a dividend and other numbers of CPU cores as divisor.
-The scalability of pipeline is stronger if the speedup is bigger.
-
-As Fig~\ref{fig3}.a shown, the speedup of STARsolo can get improve between 32 and 48 CPU cores.
-Surprising, the performance of STARsolo in 48 CPU cores condition even more efficiency than the performance of STARsolo when CPU cores number bigger than 48.
-This shows the scalability of STARsolo can get imporve when CPU cores number below a threshold but the improve of the performance of STARsolo can not scale-out with CPU cores number when CPU cores number bigger than the threshold.
-
-As for CellRanger, we found when CPU cores number bigger than 32, the speedup of CellRanger can not take advantage of CPU cores number increase.
-This shows CellRanger approximately lacks scalability when CPU cores number bigger than a threshold, in this case, the threshold is 32.
-
-We found the speedup of scSpark is highest when CPU cores number is below 64.
-Do not like the speedup of STARsolo and CellRanger, the speedup of scSpark is monotonically increasing with CPU cores number.
-Furthermore, as Fig~\ref{fig3}.b shown, the speedup of scSpark achieve average 50\% improve when the CPU cores number of Spark cluster increased from 128 to 256.
-This shows the scalability of scSpark not only have stable improve contrast with STARsolo and CellRanger, but also have more efficiency scalability than STARsolo and CellRanger.
+Firstly, we tested whether these pipelines could have higher runnning speeds when more CPU cores were available. Herein, we used the speedup metric, which was calculated as the ratio of the baseline time consumption when 32 CPU cores were available and the time consumption when a specific number of CPU cores were provided, to reveal the ability of computational resouce utilization of various pipelines for data processing efficiency promotion. Results (Fig~\ref{fig3}) show that CellRanger almost remained constant in the running speed, which indicated its poor capability of using more CPU cores for data processing acceleration. STARsolo had a relatively higher speedup when small numbers of CPU cores were available before a considerable speedup decline when more than 48 CPU cores were provided. Compared with these two pipelines, scSpark remained an approximately linear acceleration of data processing in a wide range of CPU cores available from 32 to 256, demonstrating a superior scalability.
 
 In pretest, we found that the performance of UMI-tools can not take advantage of CPU core number increase because it only be supported on single\-thread mode except align step.
 Although STAR can provides scalability on align step, the whole UMI-tools pipeline's scalability is weak.
