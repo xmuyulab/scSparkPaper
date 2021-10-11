@@ -147,7 +147,7 @@ Subsequently, we reimplemented the directional algorithm designed by UMI-tools f
 Finally, the resulting expression matrix are generated on each node and wrote to disk or distributed file system by using default Spark's action function \textit{saveAsTextfile} for further downstream analysis. 
 
 \subsection{Benchmarking experiment configurations}
-The performance of scSpark was benchmarked with CellRanger, UMI-tools and STARsolo in terms of processing speed . 
+The performance of scSpark was benchmarked with CellRanger, UMI-tools and STARsolo in terms of processing speed. 
 We used Apache Spark (version 2.1.0) as scSpark's in-memory computing environment.
 The computational cluster used consists of 8 workstations with 32 \textit{Intel Xeon (Cascade Lake) Platinum 8269CY} CPU cores at 2.5 GHz for each node. 
 Each workstation was logically split into two Spark executors such that each executor contains 16 CPU cores and 64 GB of DRAM.
@@ -208,7 +208,7 @@ In all the experiments, we run all the four pipelines with exactly the same cell
 \begin{figure}
 	\centering
 	\includegraphics[width=0.45\textwidth]{fig3.pdf}
-	\caption{Comparison in scalability of CellRanger, STARsolo, and scSpark.}
+	\caption{Comparison in scalability of CellRanger, STARsolo, and scSpark. The plot at the top-right corner of this figure shows the performance of scSpark with the total number of cores ranging from 128 to 256.}
 	\label{fig3}
 \end{figure}
 \begin{figure*}
@@ -235,15 +235,21 @@ It is noteworthy that scSpark achieved a processsing speed of approximately 50-f
 These results show that by distributed loading and processing of FASTQ reads from disk, and the avoidance of writing alignment results back to disk, scSpark can dramatically reduce the time consumption in scRNA-seq data processing. 
 
 \subsection{Scalability evaluation}
-With the rapid growth of the data volume in scRNA-seq studies, it is desired that data processing software tools should make full usage of available computational resources to improve the efficiency in large-scale data processing. To this end, we evaluated the scalability of scSpark and compared with the other three pipelines in terms of data processing speed acceleration with regard to the number of CPU cores.
+With the rapid growth of the data volume in scRNA-seq studies, it is desired that data processing software tools should make full usage of available computational resources to improve the efficiency in large-scale data processing. To this end, we evaluated the scalability of scSpark and compared with the other three pipelines in terms of data processing speed acceleration with regard to the number of processing threads.
 
-First, we tested whether the data processing speed of these pipelines could increase when more CPU cores were available. Herein, we used the speedup metric, which was calculated as the ratio of the baseline time consumption when 32 CPU cores were available to the time consumption when a specific number of CPU cores were provided, to reveal the cability in computational resouce utilization of various pipelines. Results (Fig~\ref{fig3}) show that CellRanger almost remained constant in the running speed, which indicates its poor scalability to the number of CPU cores. STARsolo had a relatively higher speedup when small numbers of CPU cores were available before a significant drop when more than 48 CPU cores were provided. \textcolor{red}{(why?)}
-Compared with these two pipelines, scSpark remained a nearly linear acceleration of data processing in a wide range of CPU cores available from 32 to 256, demonstrating a superior scalability. 
+First, we tested whether the data processing speed of these pipelines could increase when more threads or CPU cores were used. Herein, we used the speedup metric, which was calculated as the ratio of the baseline time consumption when 32 threads were available to the time consumption when other number of threads were used, to reveal the cability in computational resouce utilization of various pipelines. 
+We used PBMC\_human for this test as this dataset has the highest number of reads among the three testing datasets. 
+Results (Fig~\ref{fig3}) show that CellRanger almost remained constant in the running speed with a speedup factor of around 1 for all testing points, which indicates its poor scalability to the number of threads. 
+STARsolo achieved a relatively high speedup rate from 32 to 48 threads before a significant drop when more than 48 threads were used. When using 64 threads, the speed of STARsolo is almost the same as using 32 threads, with a speedup factor of 1.076. 
+The decrease in its speedup rate is probably due to the overhead in creating threads and joining results on a single workstation which increases with the number of threads used. 
+Compared with these two pipelines, scSpark remained a nearly linear acceleration of data processing in a wide range of number CPU cores from 32 to 256, demonstrating its superior scalability. 
 
-In its current implementation, UMI-tools only supports single-thread mode. Only its alignment module that adopts the STAR aligner could take advantage of more CPU cores. 
+In its current implementation, UMI-tools only supports single-thread mode and does not provide any argument to set the number of threads or CPU cores. Only its alignment module that adopts the STAR aligner could take advantage of more CPU cores. 
+In our pre-test, we run UMI-tools on different workstations with 16, 32, 64 CPU cores separately and the difference in processing time is negligible. 
 Therefore UMI-tools has limited scalability and is excluded from our evaluation. 
 
-\subsubsection{Scalability of align step}
+\subsubsection{Scalability of the alignment step}
+As all the four pipelines adopt STAR for sequence alignment, we further evaluated the scalability of the alignment step.  
 The aligner of all four pipelines is based on STAR, and in pretest shows the scalability of UMI-tools most comes from align step.
 So we particulaly measured mapping speed of STAR and scSpark.
 
