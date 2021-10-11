@@ -120,7 +120,7 @@ In this study, we developed scSpark based on Spark framework to leverage its two
 Moreover, the workflow of scSpark follows closely with that of UMI-tools. Briefly, our scRNA-seq data processing pipeline consists of three major steps, data loading with whitelist control, alignment of extracted reads to a reference genome, and transcript quantification. 
 
 \subsection{Data loading with whitelist control}
-scSpark loads scRNA-seq reads from sequencing result files simlilarly to other software tools. To construct RDD that contains reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
+scSpark loads scRNA-seq reads from sequencing result files (FASTQ files) similar to other software tools. To construct RDD that contains reads for subsequent parallel in-memory processing, e.g., alignment, the following procedures are used (Fig.~\ref{fig1}).
 
 For most data yielded from high-throughtput scRNA-seq platforms, two FASTQ~\cite{cock2010sanger} files are generated to save the paired-end sequencing results where the first FASTQ file contains information of cell barcodes and UMIs, and the second one contains transcript sequences.
 First, scSpark loads scRNA-seq reads from disks in parallel into two RDDs, which are FASTQ R1 RDD for the first read and FASTQ R2 RDD for the second read respectively by using \textit{newAPIHadoopFile} Spark function and reimplementing Hadoop-BAM~\cite{hadoopBAM}.
