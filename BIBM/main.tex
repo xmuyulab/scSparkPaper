@@ -225,18 +225,17 @@ In all the experiments, we run all the four pipelines with exactly the same cell
 \end{figure}
 
 To illustrate the efficiency improvement brought by scSpark, we first compared the total time consumption of scSpark with that of UMI-tools, STARsolo and CellRanger, when the same number of CPU cores are used. Specifically, scSpark was run in a distributed way on 4 computational nodes with 16 CPU cores in each node, while a 64-CPU workstation was used to run the other three pipelines separately. 
-Results show that scSpark achieved substantially higher processing speed, which was nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}) for all the three datasets tested. % when processing the PBMC\_human dataset containing 640 million reads. 
+Results show that scSpark achieved substantially higher processing speed, which was nearly 20-fold faster than UMI-tools and about 5-fold faster than CellRanger and STARsolo (Table~\ref{tab1}) for all the three datasets tested.  
 
 We also recorded the processing time for the three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification, to have a more detailed understanding of the performance gain. 
 As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark, to demonstrate the performance gain brought by distributed and in-memory computing. 
 Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
 It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance gain brought by scSpark. 
-Moreover we found if scSpark and STAR both reduce genome load time that scSpark doesn't change STAR's tradition way, scSpark can get more than linear improve than STAR in align step which can prove scSpark can reduce align step's mapping time by reducing disk access.
-The imporve in transcript counting step is influenced by data imbalance but its performance is more than 2-fold than UMI-tools.
 
-This result reflects that distributed processing of FASTQ reads from disk and totally removal of re-writing temporary results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
+These results reflect that distributed loading and processing of FASTQ reads from disk and totally removal of re-writing temporary results back to disk that are both performed in scSpark can dramatically reduce the time consumption of scRNA-seq data processing pipelines. 
 
 \subsection{Scalability evaluation}
+As the explosive growth of the data volume of scRNA-seq studies, it becomes a racial requirement for software tools to take fully usage of available computational resources to promote the efficiency of large-scale data processing. Thus, we evaluated the scalability of scSpark and other pipelines to demonstrate their capabilities of using CPU cores for data processing acceleration.
 
 \subsubsection{Scalability of each pipelines}
 Contrast with traditional pipelines only can process on single workstation, scSpark can inherent process across Spark cluster.
