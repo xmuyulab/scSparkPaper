@@ -214,9 +214,9 @@ In all the experiments, we run all the four pipelines with exactly the same cell
 \end{figure}
 \begin{figure*}
 	\centering
-	\subfigure[STAR's mapping speedup contrast with scSpark's mapping speed.]{\includegraphics[width=0.45\textwidth]{fig4a.pdf}}
-	\subfigure[scSpark's mapping speed.]{\includegraphics[width=0.45\textwidth]{fig4b.pdf}}
-	\caption{Mapping speed.}
+	\subfigure[Comparison in alignment speed between STAR and scSpark]{\includegraphics[width=0.45\textwidth]{fig4a.pdf}}
+	\subfigure[The alignment speed of scSpark w.r.t. the number of CPU cores.]{\includegraphics[width=0.45\textwidth]{fig4b.pdf}}
+	\caption{Evaluation of the alignment speed w.r.t. the number of CPU cores.}
 	\label{fig4}
 \end{figure*}
 \begin{figure}
@@ -236,27 +236,27 @@ It is noteworthy that scSpark achieved a processsing speed of approximately 50-f
 These results show that by distributed loading and processing of FASTQ reads from disk, and the avoidance of writing alignment results back to disk, scSpark can dramatically reduce the time consumption in scRNA-seq data processing. 
 
 \subsection{Scalability evaluation}
-With the rapid growth of the data volume in scRNA-seq studies, it is desired that data processing software tools should make full usage of available computational resources to improve the efficiency in large-scale data processing. To this end, we evaluated the scalability of scSpark and compared with the other three pipelines in terms of data processing speed acceleration with regard to the number of CPU cores or processing threads and the data volume.
+With the rapid growth of the data volume in scRNA-seq studies, it is desired that data processing software tools should make full usage of available computational resources to maximize the efficiency in large-scale data processing. To this end, we evaluated the scalability of scSpark and compared with the other three pipelines in terms of data processing speed acceleration with regard to the number of processing threads or CPU cores and the data volume.
 
-\subsubsection{Overall scalability to number of CPU cores}
-First, we tested whether the data processing speed of these pipelines could increase when more threads or CPU cores were used. Herein, we used the speedup metric, which was calculated as the ratio of the baseline time consumption when 32 threads were available to the time consumption when other number of threads were used, to reveal the cability in computational resouce utilization of various pipelines. 
-We used PBMC\_human for this test as this dataset has the highest number of reads among the three testing datasets. 
-Results (Fig~\ref{fig3}) show that CellRanger almost remained constant in the running speed with a speedup factor of around 1 for all testing points, which indicates its poor scalability to the number of threads. 
-STARsolo achieved a relatively high speedup rate from 32 to 48 threads before a significant drop when more than 48 threads were used. When using 64 threads, the speed of STARsolo is almost the same as using 32 threads, with a speedup factor of 1.076. 
+\subsubsection{Overall scalability to the number of CPU cores}
+First, we tested whether the data processing speed of these pipelines could increase when more threads or CPU cores were used. Herein, we used the speedup metric, which was calculated as the ratio of the baseline time consumption when 32 CPU cores were available to the time consumption when other number of CPU cores were used, to reveal the cability in computational resouce utilization of various pipelines. 
+We used PBMC\_human for this test as this dataset has the largest number of reads among the three testing datasets, which helps to minimize the impact of the overhead for multi-threading on the evaluation results. 
+Our results (Fig~\ref{fig3}) show that CellRanger almost remained constant running speed with a speedup factor of around 1 for all testing points, which indicates its poor scalability to the number of cores. 
+STARsolo achieved a relatively high speedup rate from 32 to 48 cores before a significant drop when more than 48 cores were used. When using 64 cores, the speed of STARsolo is almost the same as using 32 cores, with a speedup factor of 1.076. 
 The decrease in its speedup rate is probably due to the overhead in creating threads and joining results on a single workstation which increases with the number of threads used. 
 Compared with these two pipelines, scSpark remained a nearly linear acceleration of data processing in a wide range of number CPU cores from 32 to 256, demonstrating its superior scalability. 
 
 In its current implementation, UMI-tools only supports single-thread mode and does not provide any argument to set the number of threads or CPU cores. Only its alignment module that adopts the STAR aligner could take advantage of more CPU cores. 
-In our pre-test, we run UMI-tools on different workstations with 16, 32, 64 CPU cores separately and the difference in processing time is negligible. 
-Therefore UMI-tools has limited scalability and is excluded from our evaluation. 
+In our pre-test, we run UMI-tools on different workstations with 16, 32, 64 CPU cores separately and found that the difference in processing time is negligible. 
+Therefore UMI-tools has limited scalability and is excluded from this evaluation. 
 
-\subsubsection{Scalability of the alignment step to number of CPU cores}
+\subsubsection{Scalability of the alignment step to the number of CPU cores}
 As all the four pipelines adopt STAR for sequence alignment, we further evaluated the scalability of the alignment step. 
-In particulaly, we measured the alignment speed and compared betwen STAR and scSpark. 
-Fig.~\ref{fig4} shows the number of reads being aligned by STAR and scSpark with different numbers of CPU cores used. 
-STAR consists of \textit{load} and \textit{mapping} and for this evaluation we only measure the speed for \textit{mapping} module. Therefore both scSpark and STAR load reads from memory and the time for loading FASTQ files was not included in the comparison. However, scSpark outputs alignment results to memory (SAM RDD) while STAR output alignment results to harddisk as a SAM file.  
+In particular, we measured the alignment speed and compared betwen STAR and scSpark when different number of threads or CPU cores were used. 
+Fig.~\ref{fig4} shows the number of reads being aligned by STAR and scSpark with different numbers of CPU cores. 
+STAR consists of \textit{load} and \textit{mapping} and for this evaluation we only measure the time consumed for the \textit{mapping} module. Therefore both scSpark and STAR extracted reads data from memory and the time for loading FASTQ files from harddisks was not included in the comparison. However, scSpark outputs alignment results to memory (SAM RDD) while STAR outputs alignment results to harddisk as a SAM file.  
 For scSpark, the number of reads processed per hour increases linearly with the number of CPU cores, showing that scSpark took advantages of distributed computing and in-memory computing. 
-For STAR, the output of alignment results to harddisk has created a bottleneck such that the processing speed hardly increase when more than 32 CPU cores were used. 
+For STAR, the output of alignment results to harddisk has probably created a bottleneck such that the processing speed hardly increased when more than 32 CPU cores were used. 
 %The aligner of all four pipelines is based on STAR, and in pretest shows the scalability of UMI-tools most comes from align step.
 %So we particulaly measured mapping speed of STAR and scSpark.
 
@@ -265,7 +265,7 @@ For STAR, the output of alignment results to harddisk has created a bottleneck s
 %Furthermore, we found the mapping speed of scSpark can get nearly linear parallel efficiency with CPU cores number increase.
 %Although the mapping speed of STAR can get improve when CPU core number between 16 and 32, the improve of the mapping speed of STAR will converage when CPU cores number bigger than 32.
 
-As shown in Fig.~\ref{fig4}.b, the alignment speed of scSpark increased linearly for all testing points when the number of CPU cores used ranges from 128 to 256. This accounts to the usage of 32 CPU cores for each of the 8 computational nodes.  
+Further, as shown in Fig.~\ref{fig4}.b, the alignment speed of scSpark increased linearly for all testing points when the number of CPU cores used ranges from 128 to 256. This accounts to the full utilization of 32 CPU cores for each of the 8 computational nodes.  
 %And as Fig~\ref{fig4}.b shown, the mapping speed of scSpark can get linear parallel efficiency even CPU cores number scale out to 256.
 %This shows the scalability of scSpark is much more efficiency than STAR in align step.
 
