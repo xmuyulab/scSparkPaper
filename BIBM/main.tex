@@ -127,7 +127,7 @@ Subsequently, scSpark extracts cell barcodes and UMIs from FASTQ R1 RDD, and sto
 
 \subsection{Parallel genome alignment}
 
-As in other popular scRNAseq processing pipeline such as CellRanger, UMI-tools and STARsolo, STAR is adopted in scSpark as the aligner. However, the standalone STAR alignment procedure loads raw reads from FASTQ files and writes alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time. To fully leverage the in-memory processing capability provided by Spark, in scSpark, we use the Java Native Interface (JNI)~\cite{kim2012benchmarking} to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}a). 
+As in other popular scRNA-seq processing pipeline such as CellRanger, UMI-tools and STARsolo, STAR is adopted in scSpark as the aligner. However, the standalone STAR alignment procedure loads raw reads from FASTQ files and writes alignment results to Sequence Aligment/Map (SAM) or the compressed binary version of a SAM (BAM)~\cite{li2009sequence} file, requiring extensive disk access which consumes a significant amount of time. To fully leverage the in-memory processing capability provided by Spark, in scSpark, we use the Java Native Interface (JNI)~\cite{kim2012benchmarking} to directly feed FASTQ RDD to STAR, and further transfer the results output from STAR to the SAM RDD after alignment (Fig.~\ref{fig1}a). 
 In such way, the alignment process is performed in an in-memory computing manner without redundant disk access. 
 
 To balance the workloads across different nodes for parallel processing, we use the Spark function \textit{repartition} before alignment to split FASTQ RDDs into \textit{N} subsets where \textit{N} denotes the number of nodes available in the cluster.
@@ -225,7 +225,7 @@ Results show that scSpark achieved substantially higher processing speed, which 
 We also recorded the processing time for the three individual modules of the pipelines, i.e., barcode extraction and sequence QC, genome alignment, and transcript quantification to gain deeper understanding on the performance gains in these steps. 
 As scSpark is built based on UMI-tools, the breakdown comparison was only between UMI-tools and scSpark to demonstrate the performance gain brought by distributed and in-memory computing. 
 Compared with UMI-tools, scSpark had significantly shorter processing time in all three steps (Fig.~\ref{fig2}).
-It is noteworthy that scSpark achieved a processsing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance gain brought by scSpark. 
+It is noteworthy that scSpark achieved a processing speed of approximately 50-fold faster than UMI-tools for the barcode extraction and sequence QC step, which turned out to be the dominant factor of the performance gain brought by scSpark. 
 
 These results show that by distributed loading and processing of FASTQ reads from disk, and the avoidance of writing alignment results back to disk, scSpark can dramatically reduce the time consumption in scRNA-seq data processing. 
 
